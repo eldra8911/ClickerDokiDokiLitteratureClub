@@ -20,32 +20,33 @@ body {
     color: white;
 }
 #overlay {
-    background: rgba(0,0,0,0.25);
+    background: rgba(0,0,0,0.35);
     min-height: 100vh;
     display: flex;
 }
-/* Classement gauche */
+
+/* ---------- LEADERBOARD ---------- */
 #leaderboardPanel {
     width: 260px;
-    background: rgba(255,182,193,0.85);
+    background: rgba(255,182,193,0.9);
     padding: 10px;
     transition: transform 0.3s ease;
 }
 #leaderboardPanel.hidden { transform: translateX(-240px); }
 #toggleLeaderboard {
     cursor: pointer;
-    color: #ff6fa9;
+    color: #ff4fa3;
     text-align: right;
     font-size: 14px;
 }
-/* Centre */
+
+/* ---------- MAIN ---------- */
 #main {
     flex: 1;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    flex-direction: column;
-    padding: 20px;
 }
 #logo {
     max-width: 380px;
@@ -53,110 +54,137 @@ body {
     user-select: none;
 }
 .bounce { animation: bounce 0.25s ease; }
-@keyframes bounce { 0%{scale:1}40%{scale:0.95}100%{scale:1} }
-/* Boutique droite */
+@keyframes bounce {
+    0% { transform: scale(1); }
+    40% { transform: scale(0.94); }
+    100% { transform: scale(1); }
+}
+
+/* ---------- SHOP ---------- */
 #shop {
     width: 300px;
     background: rgba(0,0,0,0.9);
     padding: 15px;
     overflow-y: auto;
 }
-/* Stats bas gauche */
+.upgrade {
+    border: 1px solid #444;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+button {
+    background: #1a1a1a;
+    color: white;
+    border: 1px solid #ff6fa9;
+    padding: 6px 14px;
+    cursor: pointer;
+}
+button:hover {
+    background: #ff6fa9;
+    color: black;
+}
+
+/* ---------- STATS ---------- */
 #statsBar {
     position: fixed;
     bottom: 10px;
     left: 10px;
     background: rgba(0,0,0,0.85);
     padding: 10px 15px;
-    font-size: 14px;
     border: 1px solid #ff6fa9;
-    min-width: 180px;
-    max-width: 300px;
-    transition: width 0.3s ease, padding 0.3s ease;
+    font-size: 14px;
+    max-width: 320px;
 }
-/* Toast succès */
+
+/* ---------- TOAST ---------- */
 .toast {
     position: fixed;
-    bottom: 70px;
+    bottom: 20px;
     right: 20px;
     background: rgba(255,105,180,0.95);
     padding: 12px 18px;
     border-radius: 6px;
     font-size: 14px;
-    color: #fff;
     box-shadow: 0 0 12px #ff69b4aa;
     opacity: 0;
-    transition: opacity 0.4s, transform 0.4s;
+    transform: translateY(10px);
+    transition: all 0.4s ease;
 }
 .toast.show {
     opacity: 1;
-    transform: translateY(-10px);
+    transform: translateY(0);
 }
-h2 { color: #ff6fa9; text-align: center; }
-.upgrade { border: 1px solid #444; padding: 10px; margin-bottom: 10px; }
-button { background: #1a1a1a; color: white; border: 1px solid #ff6fa9; padding: 8px 16px; cursor: pointer; }
-button:hover { background: #ff6fa9; color: black; }
-#leaderboard li { font-size: 14px; margin-bottom: 5px; }
+
+/* ---------- LOGIN ---------- */
 #loginPanel {
     position: fixed;
-    top:0; left:0; width:100%; height:100%;
+    inset: 0;
     background: rgba(0,0,0,0.9);
-    display:flex; align-items:center; justify-content:center; flex-direction:column;
-    color:white; font-family:monospace; z-index:100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
 }
-#loginPanel input { margin:6px 0; padding:6px; width:200px; border:1px solid #ff6fa9; background:#1a1a1a; color:white; }
-#loginPanel button { margin-top:10px; }
+#loginPanel input {
+    margin: 6px;
+    padding: 6px;
+    background: #111;
+    border: 1px solid #ff6fa9;
+    color: white;
+}
 </style>
 </head>
 
 <body>
 
-<!-- Audio -->
+<!-- AUDIO -->
 <audio id="music" loop>
-    <source src="audio/Doki Doki Literature Club! OST - Doki Doki Literature Club! (Main Theme).mp3" type="audio/mpeg">
+    <source src="audio/Doki Doki Literature Club! OST - Doki Doki Literature Club! (Main Theme).mp3">
 </audio>
 <audio id="clickSound">
-    <source src="audio/computer-mouse-click-351398.mp3" type="audio/mpeg">
+    <source src="audio/computer-mouse-click-351398.mp3">
 </audio>
 
-<!-- Login -->
+<!-- LOGIN -->
 <div id="loginPanel">
-    <h2>Literature.exe - Connexion</h2>
-    <input id="loginName" type="text" placeholder="Pseudo">
+    <h2>Literature.exe</h2>
+    <input id="loginName" placeholder="Pseudo">
     <input id="loginPass" type="password" placeholder="Mot de passe">
-    <button onclick="login()">Connexion / Créer compte</button>
+    <button onclick="login()">Connexion / Créer</button>
 </div>
 
-<!-- Overlay principal -->
-<div id="overlay" style="display:none;">
+<div id="overlay" style="display:none">
+
+<!-- LEADERBOARD -->
 <div id="leaderboardPanel">
     <div id="toggleLeaderboard" onclick="toggleLeaderboard()">≪</div>
-    <h2>Classement</h2>
+    <h3>Classement</h3>
     <ol id="leaderboard"></ol>
 </div>
 
+<!-- MAIN -->
 <div id="main">
-    <img id="logo"
-         src="https://vignette.wikia.nocookie.net/doki-doki-literature-club/images/c/c9/Logo.png/revision/latest?cb=20171204125056"
+    <img id="logo" src="https://vignette.wikia.nocookie.net/doki-doki-literature-club/images/c/c9/Logo.png/revision/latest?cb=20171204125056"
          onclick="clickLiterature()">
-    <p style="opacity:0.6;">Clique sur le logo</p>
+    <p style="opacity:.6">Clique sur le logo</p>
 </div>
 
+<!-- SHOP -->
 <div id="shop">
-    <h2>Boutique</h2>
+    <h3>Boutique</h3>
     <div id="shopItems"></div>
 </div>
 </div>
 
+<!-- STATS -->
 <div id="statsBar">
     <div id="points">Points : 0</div>
     <div id="stats">Par clic : 1 | Auto : 0 / sec</div>
 </div>
 
-<div id="toastContainer"></div>
-
 <script>
-// 🔥 Firebase
+/* ---------------- FIREBASE ---------------- */
 firebase.initializeApp({
   apiKey: "AIzaSyCugkmIHQfG527QDYEmeylRb-8yNBE-Qk0",
   authDomain: "dokidokilitteratureclub-61b4c.firebaseapp.com",
@@ -164,176 +192,131 @@ firebase.initializeApp({
 });
 const db = firebase.firestore();
 
-// 👤 Joueur
+/* ---------------- PLAYER ---------------- */
 let playerName, encodedPwd;
-let points=0, perClick=1, passive=0, totalPointsGained=0, purchaseBonus=0;
+let points=0, perClick=1, passive=0;
+let totalPointsGained=0, purchaseBonus=0;
 let clickTimes=[], musicStarted=false;
 
-// 🍬 Achievements
-const achievements = [
-  { id:"first_click", title:"Premiers mots", description:"Gagner 10 points", pointsBonus:0.1, condition:()=>totalPointsGained>=10 },
-  { id:"writer", title:"Écrivain", description:"Gagner 1000 points", pointsBonus:0.5, condition:()=>totalPointsGained>=1000 },
-  { id:"poet", title:"Poète", description:"Acheter un poème", pointsBonus:0.2, condition:()=>purchaseBonus>=0.2 }
-];
-let unlockedAchievements=[];
+/* ---------------- TOAST ---------------- */
+function toast(title, msg) {
+    const t = document.createElement("div");
+    t.className = "toast";
+    t.innerHTML = `<strong>${title}</strong><br>${msg}`;
+    document.body.appendChild(t);
+    setTimeout(()=>t.classList.add("show"),10);
+    setTimeout(()=>{ t.classList.remove("show"); setTimeout(()=>t.remove(),400); },4000);
+}
 
-// 🔄 Login
+/* ---------------- LOGIN ---------------- */
 function login(){
-    const name=document.getElementById("loginName").value.trim();
-    const pass=document.getElementById("loginPass").value;
-    if(!name||!pass){ alert("Remplir les deux champs"); return; }
-    playerName=name;
-    encodedPwd=btoa(pass); // simple hash
-    localStorage.setItem("ddlc_name",playerName);
-    localStorage.setItem("ddlc_password",encodedPwd);
+    playerName = loginName.value.trim();
+    encodedPwd = btoa(loginPass.value);
+    if(!playerName || !loginPass.value) return;
+    localStorage.setItem("ddlc_user", playerName);
+    localStorage.setItem("ddlc_pwd", encodedPwd);
     document.getElementById("loginPanel").style.display="none";
     document.getElementById("overlay").style.display="flex";
     initPlayer();
 }
 
-// 🔄 Charger / créer compte
+/* ---------------- LOAD PLAYER ---------------- */
 function initPlayer(){
     db.collection("players").doc(playerName).get().then(doc=>{
-        if(doc.exists && doc.data().password===encodedPwd){
-            const data=doc.data();
-            points=data.points;
-            perClick=data.perClick;
-            passive=data.passive;
-            totalPointsGained=data.totalPointsGained||points;
-            purchaseBonus=data.purchaseBonus||0;
-            unlockedAchievements=data.unlockedAchievements||[];
-            updateUI();
-        }else{ savePlayerData(); }
-        renderShop(); loadLeaderboard(); updateUI();
-    }).catch(()=>{ // fallback local
-        const backup=JSON.parse(localStorage.getItem("ddlc_backup"));
-        if(backup){ points=backup.points; perClick=backup.perClick; passive=backup.passive; totalPointsGained=backup.totalPointsGained||points; purchaseBonus=backup.purchaseBonus||0; unlockedAchievements=backup.unlockedAchievements||[]; updateUI(); }
-        renderShop(); loadLeaderboard();
+        if(doc.exists && doc.data().pwd===encodedPwd){
+            Object.assign(window, doc.data().save);
+        }
+        updateUI();
+        renderShop();
+        loadLeaderboard();
     });
 }
 
-// UI
+/* ---------------- UI ---------------- */
 function updateUI(){
-    document.getElementById("points").innerText="Points : "+Math.floor(points);
-    document.getElementById("stats").innerText=`Par clic : ${perClick} | Auto : ${passive} / sec`;
-    const statsBar=document.getElementById("statsBar");
-    statsBar.style.width=Math.min(300, 180+Math.floor(document.getElementById("points").innerText.length*6))+"px";
+    pointsEl.innerText = "Points : " + Math.floor(points);
+    stats.innerText = `Par clic : ${perClick} | Auto : ${passive} / sec`;
 }
 
-// Anti auto-clic + bounce + son + musique
+/* ---------------- CLICK ---------------- */
 function clickLiterature(){
-    const logo=document.getElementById("logo");
-    const clickSound=document.getElementById("clickSound");
-    const music=document.getElementById("music");
+    const now = Date.now();
+    clickTimes.push(now);
+    clickTimes = clickTimes.filter(t => now - t < 1000);
 
-    logo.classList.remove("bounce"); void logo.offsetWidth; logo.classList.add("bounce");
+    let gain = perClick;
+    if(clickTimes.length > 10) gain *= 0.2;
+    if(clickTimes.length > 10) gain = 0;
+
+    points += gain;
+    totalPointsGained += gain;
+
+    logo.classList.remove("bounce"); void logo.offsetWidth;
+    logo.classList.add("bounce");
     clickSound.currentTime=0; clickSound.play();
     if(!musicStarted){ music.volume=0.5; music.play(); musicStarted=true; }
 
-    const now=Date.now();
-    clickTimes.push(now);
-    clickTimes=clickTimes.filter(t=>now-t<1000);
-
-    let gain=perClick;
-    if(clickTimes.length>12) gain*=0.2;
-    if(clickTimes.length>20) gain=0;
-
-    points+=gain;
-    totalPointsGained+=gain;
     updateUI();
-    checkAchievements();
 }
 
-// Boutique
-const upgrades=[
-  { name:"✒️ Stylo", cost:50, perClick:1, passive:0, bonus:0.1 },
-  { name:"📓 Poème", cost:250, perClick:5, passive:0, bonus:0.2 },
-  { name:"💾 Fichier .chr", cost:500, perClick:0, passive:2, bonus:0.5 }
+/* ---------------- SHOP ---------------- */
+const upgrades = [
+ {name:"✒️ Stylo", cost:50, perClick:1, passive:0, bonus:0.1},
+ {name:"📓 Poème", cost:250, perClick:5, passive:0, bonus:0.2},
+ {name:"💾 Fichier .chr", cost:500, perClick:0, passive:2, bonus:0.5}
 ];
+
 function renderShop(){
-    const shop=document.getElementById("shopItems");
-    shop.innerHTML="";
+    shopItems.innerHTML="";
     upgrades.forEach(up=>{
-        const div=document.createElement("div");
-        div.className="upgrade";
-        div.innerHTML=`
+        const d=document.createElement("div");
+        d.className="upgrade";
+        d.innerHTML=`
             <strong>${up.name}</strong><br>
-            +${up.perClick} clic<br>
-            +${up.passive} sec<br>
+            +${up.perClick} clic / +${up.passive} sec<br>
             Coût : ${up.cost}<br><br>
-            <button onclick='buyUpgrade(${JSON.stringify(up)})'>Acheter</button>
-        `;
-        shop.appendChild(div);
+            <button onclick='buyUpgrade(${JSON.stringify(up)})'>Acheter</button>`;
+        shopItems.appendChild(d);
     });
 }
+
 function buyUpgrade(up){
     if(points>=up.cost){
         points-=up.cost;
         perClick+=up.perClick;
         passive+=up.passive;
         purchaseBonus+=up.bonus;
-        animateUpgrade(up);
+        toast("Achat effectué", up.name + " acquis !");
         updateUI();
-        savePlayerData();
-        checkAchievements();
     }
 }
-function animateUpgrade(up){
-    alert(`✨ Vous avez acheté ${up.name} !`); // simple pour l'instant, plus tard animation visuelle
-}
 
-// Passif
-setInterval(()=>{ points+=passive; totalPointsGained+=passive; if(passive>0) updateUI(); checkAchievements(); },1000);
+/* ---------------- PASSIVE ---------------- */
+setInterval(()=>{ points+=passive; totalPointsGained+=passive; updateUI(); },1000);
 
-// Sauvegarde
-function savePlayerData(){
+/* ---------------- SAVE ---------------- */
+setInterval(()=>{
     db.collection("players").doc(playerName).set({
-        password:encodedPwd, points:Math.floor(points), perClick, passive,
-        totalPointsGained, purchaseBonus, unlockedAchievements
+        pwd: encodedPwd,
+        save:{points,perClick,passive,totalPointsGained,purchaseBonus}
     });
-    localStorage.setItem("ddlc_backup", JSON.stringify({points, perClick, passive, totalPointsGained, purchaseBonus, unlockedAchievements}));
-}
+},8000);
 
-// Achievements
-function showToast(title,msg){ 
-    const toast=document.createElement("div");
-    toast.className="toast";
-    toast.innerHTML=`<strong>${title}</strong><br>${msg}`;
-    document.body.appendChild(toast);
-    setTimeout(()=>{ toast.classList.add("show"); },10);
-    setTimeout(()=>{ toast.classList.remove("show"); setTimeout(()=>toast.remove(),400); },4000);
-}
-function checkAchievements(){
-    achievements.forEach(a=>{
-        if(a.condition() && !unlockedAchievements.includes(a.id)){
-            unlockedAchievements.push(a.id);
-            points+=a.pointsBonus; // donne points classement
-            showToast(a.title,a.description);
-            savePlayerData();
-        }
-    });
-}
-
-// Score
-function getScore(){ return totalPointsGained/1000+purchaseBonus; }
-
-// Classement
+/* ---------------- LEADERBOARD ---------------- */
 function loadLeaderboard(){
-    db.collection("players").orderBy("points","desc").limit(15).onSnapshot(snapshot=>{
-        const list=document.getElementById("leaderboard");
-        list.innerHTML="";
-        snapshot.forEach(doc=>{
-            const data=doc.data();
-            const score=(data.totalPointsGained/1000)+(data.purchaseBonus||0);
-            list.innerHTML+=`<li>${doc.id} — ${score.toFixed(2)}</li>`;
+    db.collection("players").onSnapshot(snap=>{
+        leaderboard.innerHTML="";
+        snap.forEach(d=>{
+            const s = d.data().save;
+            const score = (s.totalPointsGained/1000 + s.purchaseBonus).toFixed(2);
+            leaderboard.innerHTML += `<li>${d.id} — ${score}</li>`;
         });
     });
 }
 
-// Toggle leaderboard
-function toggleLeaderboard(){ document.getElementById("leaderboardPanel").classList.toggle("hidden"); }
-
-window.addEventListener("beforeunload", savePlayerData);
+function toggleLeaderboard(){
+    leaderboardPanel.classList.toggle("hidden");
+}
 </script>
 
 </body>
