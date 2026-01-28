@@ -24,24 +24,29 @@ body {
     min-height: 100vh;
     display: flex;
 }
+
+/* Classement gauche */
 #leaderboardPanel {
     width: 260px;
     background: rgba(0,0,0,0.9);
     padding: 10px;
     transition: transform 0.3s ease;
 }
-#leaderboardPanel.hidden {
-    transform: translateX(-240px);
-}
+#leaderboardPanel.hidden { transform: translateX(-240px); }
 #toggleLeaderboard {
     cursor: pointer;
     color: #ff6fa9;
     text-align: right;
     font-size: 14px;
 }
+
+/* Centre */
 #main {
     flex: 1;
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
     padding: 20px;
 }
 #logo {
@@ -51,12 +56,16 @@ body {
 }
 .bounce { animation: bounce 0.25s ease; }
 @keyframes bounce { 0%{scale:1}40%{scale:0.95}100%{scale:1} }
+
+/* Boutique droite */
 #shop {
     width: 300px;
     background: rgba(0,0,0,0.9);
     padding: 15px;
     overflow-y: auto;
 }
+
+/* Stats bas gauche */
 #statsBar {
     position: fixed;
     bottom: 10px;
@@ -65,6 +74,9 @@ body {
     padding: 10px 15px;
     font-size: 14px;
     border: 1px solid #ff6fa9;
+    min-width: 180px;
+    max-width: 300px;
+    transition: width 0.3s ease, padding 0.3s ease;
 }
 h2 { color: #ff6fa9; text-align: center; }
 .upgrade { border: 1px solid #444; padding: 10px; margin-bottom: 10px; }
@@ -76,7 +88,7 @@ button:hover { background: #ff6fa9; color: black; }
 
 <body>
 
-<!-- AUDIO -->
+<!-- Audio -->
 <audio id="music" loop>
     <source src="audio/Doki Doki Literature Club! OST - Doki Doki Literature Club! (Main Theme).mp3" type="audio/mpeg">
 </audio>
@@ -110,7 +122,7 @@ button:hover { background: #ff6fa9; color: black; }
 </div>
 
 <script>
-// 🔥 FIREBASE
+// 🔥 Firebase
 firebase.initializeApp({
   apiKey: "AIzaSyCugkmIHQfG527QDYEmeylRb-8yNBE-Qk0",
   authDomain: "dokidokilitteratureclub-61b4c.firebaseapp.com",
@@ -118,92 +130,90 @@ firebase.initializeApp({
 });
 const db = firebase.firestore();
 
-// 👤 Compte joueur
+// 👤 Joueur
 let playerName = localStorage.getItem("ddlc_name");
 let password = localStorage.getItem("ddlc_password");
+function encodePassword(pwd){ return btoa(pwd); } // simple "hash"
 
-if (!playerName || !password) {
+// Si pas de compte
+if(!playerName || !password){
     playerName = prompt("Pseudo :");
     password = prompt("Mot de passe :");
     localStorage.setItem("ddlc_name", playerName);
     localStorage.setItem("ddlc_password", password);
 }
+let encodedPwd = encodePassword(password);
 
 // 🎮 Stats
-let points = 0, perClick = 1, passive = 0;
-let clickTimes = [], musicStarted = false;
-let lastSentScore = 0;
+let points=0, perClick=1, passive=0, totalPointsGained=0, purchaseBonus=0;
+let clickTimes=[], musicStarted=false, lastSentScore=0;
 
 // 🛒 Upgrades
-const upgrades = [
-  { name:"✒️ Stylo", cost:50, perClick:1, passive:0 },
-  { name:"📓 Poème", cost:250, perClick:5, passive:0 },
-  { name:"💾 Fichier .chr", cost:500, perClick:0, passive:2 }
+const upgrades=[
+  { name:"✒️ Stylo", cost:50, perClick:1, passive:0, bonus:0.1 },
+  { name:"📓 Poème", cost:250, perClick:5, passive:0, bonus:0.2 },
+  { name:"💾 Fichier .chr", cost:500, perClick:0, passive:2, bonus:0.5 }
 ];
 
-// 🔄 Chargement du compte
-db.collection("players").doc(playerName).get().then(doc => {
-    if(doc.exists && doc.data().password === password){
-        points = doc.data().points;
-        perClick = doc.data().perClick;
-        passive = doc.data().passive;
+// 🔄 Charger compte
+db.collection("players").doc(playerName).get().then(doc=>{
+    if(doc.exists && doc.data().password === encodedPwd){
+        points=doc.data().points;
+        perClick=doc.data().perClick;
+        passive=doc.data().passive;
+        totalPointsGained=doc.data().totalPointsGained || points;
+        purchaseBonus=doc.data().purchaseBonus || 0;
         updateUI();
-    } else {
-        savePlayerData(); // crée nouveau compte
-    }
-}).catch(() => {
-    // fallback si pas de connexion : charger backup local
-    const backup = JSON.parse(localStorage.getItem("ddlc_backup"));
+    } else { savePlayerData(); }
+}).catch(()=>{
+    const backup=JSON.parse(localStorage.getItem("ddlc_backup"));
     if(backup){
-        points = backup.points;
-        perClick = backup.perClick;
-        passive = backup.passive;
+        points=backup.points;
+        perClick=backup.perClick;
+        passive=backup.passive;
+        totalPointsGained=backup.totalPointsGained||points;
+        purchaseBonus=backup.purchaseBonus||0;
         updateUI();
     }
 });
 
-// 🖱️ Fonctions
+// UI
 function updateUI(){
-    document.getElementById("points").innerText = "Points : "+Math.floor(points);
-    document.getElementById("stats").innerText = `Par clic : ${perClick} | Auto : ${passive} / sec`;
+    document.getElementById("points").innerText="Points : "+Math.floor(points);
+    document.getElementById("stats").innerText=`Par clic : ${perClick} | Auto : ${passive} / sec`;
+    // Ajuste la largeur de la barre selon la longueur
+    const statsBar=document.getElementById("statsBar");
+    statsBar.style.width=Math.min(300, 180+Math.floor(document.getElementById("points").innerText.length*6))+"px";
 }
 
 // Anti auto-clic + bounce + son + musique
 function clickLiterature(){
-    const logo = document.getElementById("logo");
-    const clickSound = document.getElementById("clickSound");
-    const music = document.getElementById("music");
+    const logo=document.getElementById("logo");
+    const clickSound=document.getElementById("clickSound");
+    const music=document.getElementById("music");
 
-    logo.classList.remove("bounce");
-    void logo.offsetWidth;
-    logo.classList.add("bounce");
+    logo.classList.remove("bounce"); void logo.offsetWidth; logo.classList.add("bounce");
+    clickSound.currentTime=0; clickSound.play();
+    if(!musicStarted){ music.volume=0.5; music.play(); musicStarted=true; }
 
-    clickSound.currentTime = 0;
-    clickSound.play();
-
-    if(!musicStarted){
-        music.volume = 0.5;
-        music.play();
-        musicStarted = true;
-    }
-
-    const now = Date.now();
+    const now=Date.now();
     clickTimes.push(now);
-    clickTimes = clickTimes.filter(t => now - t < 1000);
+    clickTimes=clickTimes.filter(t=>now-t<1000);
 
-    let gain = perClick;
-    if(clickTimes.length>12) gain *=0.2;
-    if(clickTimes.length>20) gain = 0;
+    let gain=perClick;
+    if(clickTimes.length>12) gain*=0.2;
+    if(clickTimes.length>20) gain=0;
 
-    points += gain;
+    points+=gain;
+    totalPointsGained+=gain;
     updateUI();
 }
 
-// 🛍️ Boutique
+// Boutique
 function renderShop(){
-    const shop = document.getElementById("shopItems");
+    const shop=document.getElementById("shopItems");
     upgrades.forEach(up=>{
-        const div = document.createElement("div");
+        const div=document.createElement("div");
         div.className="upgrade";
         div.innerHTML=`
             <strong>${up.name}</strong><br>
@@ -220,55 +230,62 @@ function buyUpgrade(up){
         points-=up.cost;
         perClick+=up.perClick;
         passive+=up.passive;
+        purchaseBonus+=up.bonus;
         updateUI();
         savePlayerData();
     }
 }
 
-// ⏱️ Passif
+// Passif
 setInterval(()=>{
-    points += passive;
+    points+=passive;
+    totalPointsGained+=passive;
     if(passive>0) updateUI();
 },1000);
 
-// 🔄 Sauvegarde Firestore
+// Sauvegarde Firestore + local
 function savePlayerData(){
     db.collection("players").doc(playerName).set({
-        password: password,
+        password: encodedPwd,
         points: Math.floor(points),
-        perClick: perClick,
-        passive: passive,
+        perClick,
+        passive,
+        totalPointsGained,
+        purchaseBonus,
         time: Date.now()
     });
-    localStorage.setItem("ddlc_backup", JSON.stringify({points, perClick, passive}));
+    localStorage.setItem("ddlc_backup", JSON.stringify({points, perClick, passive, totalPointsGained, purchaseBonus}));
 }
 
-// 🔄 Envoi score classement
-setInterval(()=>{
-    savePlayerData();
-},10000);
+// Score calculé
+function getScore(){
+    return totalPointsGained/1000 + purchaseBonus;
+}
 
-// 🏆 Classement
+// Classement
 function loadLeaderboard(){
-    db.collection("players").orderBy("points","desc").limit(10)
-    .onSnapshot(snapshot=>{
-        const list = document.getElementById("leaderboard");
-        list.innerHTML="";
-        snapshot.forEach(doc=>{
-            list.innerHTML+=`<li>${doc.id} — ${doc.data().points}</li>`;
-        });
-    });
+    db.collection("players")
+      .orderBy("points","desc") // tri par points gagnés + bonus
+      .limit(15)
+      .onSnapshot(snapshot=>{
+          const list=document.getElementById("leaderboard");
+          list.innerHTML="";
+          snapshot.forEach(doc=>{
+              const data=doc.data();
+              const score=(data.totalPointsGained/1000)+(data.purchaseBonus||0);
+              list.innerHTML+=`<li>${doc.id} — ${score.toFixed(2)}</li>`;
+          });
+      });
 }
 
-// ⬅️ Toggle leaderboard
+// Toggle leaderboard
 function toggleLeaderboard(){
     document.getElementById("leaderboardPanel").classList.toggle("hidden");
 }
 
-// Backup local à la fermeture
 window.addEventListener("beforeunload", savePlayerData);
 
-// Initialisation
+// Init
 renderShop();
 loadLeaderboard();
 updateUI();
