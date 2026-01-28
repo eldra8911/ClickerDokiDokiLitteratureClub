@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Literature.exe</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+body {
+    margin: 0;
+    font-family: monospace;
+    background: url("https://static.wikia.nocookie.net/doki-doki-literature-club/images/5/50/Club.png/revision/latest/scale-to-width-down/1200?cb=20171231181915") no-repeat center center fixed;
+    background-size: cover;
+    color: white;
+}
+
+#overlay {
+    background: rgba(0,0,0,0.65);
+    min-height: 100vh;
+    display: flex;
+}
+
+/* === CLASSEMENT GAUCHE === */
+#leaderboardPanel {
+    width: 260px;
+    background: rgba(0,0,0,0.9);
+    padding: 10px;
+    transition: transform 0.3s ease;
+}
+
+#leaderboardPanel.hidden {
+    transform: translateX(-240px);
+}
+
+#toggleLeaderboard {
+    cursor: pointer;
+    color: #ff6fa9;
+    text-align: right;
+    font-size: 14px;
+}
+
+/* === CENTRE === */
+#main {
+    flex: 1;
+    text-align: center;
+    padding: 20px;
+}
+
+#logo {
+    max-width: 380px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.bounce {
+    animation: bounce 0.25s ease;
+}
+
+@keyframes bounce {
+    0% { transform: scale(1); }
+    40% { transform: scale(0.95); }
+    100% { transform: scale(1); }
+}
+
+/* === BOUTIQUE === */
+#shop {
+    width: 300px;
+    background: rgba(0,0,0,0.9);
+    padding: 15px;
+    overflow-y: auto;
+}
+
+/* === STATS BAS GAUCHE === */
+#statsBar {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.85);
+    padding: 10px 15px;
+    font-size: 14px;
+    border: 1px solid #ff6fa9;
+}
+
+h2 {
+    color: #ff6fa9;
+    text-align: center;
+}
+
+.upgrade {
+    border: 1px solid #444;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+button {
+    background: #1a1a1a;
+    color: white;
+    border: 1px solid #ff6fa9;
+    padding: 8px 16px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #ff6fa9;
+    color: black;
+}
+
+#leaderboard li {
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- 🎵 AUDIO -->
+<audio id="music" loop>
+    <source src="audio/Doki Doki Literature Club! OST - Doki Doki Literature Club! (Main Theme).mp3" type="audio/mpeg">
+</audio>
+
+<audio id="clickSound">
+    <source src="audio/computer-mouse-click-351398.mp3" type="audio/mpeg">
+</audio>
+
+<div id="overlay">
+
+<!-- CLASSEMENT -->
+<div id="leaderboardPanel">
+    <div id="toggleLeaderboard" onclick="toggleLeaderboard()">≪</div>
+    <h2>Classement</h2>
+    <ol id="leaderboard"></ol>
+</div>
+
+<!-- CENTRE -->
+<div id="main">
+    <img id="logo"
+         src="https://vignette.wikia.nocookie.net/doki-doki-literature-club/images/c/c9/Logo.png/revision/latest?cb=20171204125056"
+         onclick="clickLiterature()">
+    <p style="opacity:0.6;">Clique sur le logo</p>
+</div>
+
+<!-- BOUTIQUE -->
+<div id="shop">
+    <h2>Boutique</h2>
+    <div id="shopItems"></div>
+</div>
+
+</div>
+
+<!-- STATS -->
+<div id="statsBar">
+    <div id="points">Points : 0</div>
+    <div id="stats">Par clic : 1 | Auto : 0 / sec</div>
+</div>
+
+<script>
+/* 🔥 FIREBASE */
+firebase.initializeApp({
+  apiKey: "AIzaSyCugkmIHQfG527QDYEmeylRb-8yNBE-Qk0",
+  authDomain: "dokidokilitteratureclub-61b4c.firebaseapp.com",
+  projectId: "dokidokilitteratureclub-61b4c"
+});
+const db = firebase.firestore();
+
+/* 👤 Joueur */
+let playerName = localStorage.getItem("ddlc_name");
+if (!playerName) {
+    playerName = prompt("Pseudo :");
+    localStorage.setItem("ddlc_name", playerName);
+}
+
+/* 🎮 Stats */
+let points = 0, perClick = 1, passive = 0;
+let musicStarted = false;
+let lastSentScore = 0;
+
+/* 🛒 Upgrades */
+const upgrades = [
+  { name:"✒️ Stylo", cost:50, perClick:1, passive:0 },
+  { name:"📓 Poème", cost:250, perClick:5, passive:0 },
+  { name:"💾 Fichier .chr", cost:500, perClick:0, passive:2 }
+];
+
+/* UI */
+function updateUI() {
+    document.getElementById("points").innerText = "Points : " + Math.floor(points);
+    document.getElementById("stats").innerText =
+        `Par clic : ${perClick} | Auto : ${passive} / sec`;
+}
+
+/* 🖱️ CLIC */
+function clickLiterature() {
+    const logo = document.getElementById("logo");
+    const clickSound = document.getElementById("clickSound");
+    const music = document.getElementById("music");
+
+    logo.classList.remove("bounce");
+    void logo.offsetWidth;
+    logo.classList.add("bounce");
+
+    clickSound.currentTime = 0;
+    clickSound.play();
+
+    if (!musicStarted) {
+        music.volume = 0.5;
+        music.play();
+        musicStarted = true;
+    }
+
+    points += perClick;
+    updateUI();
+}
+
+/* 🛍️ Boutique */
+function renderShop() {
+    const shop = document.getElementById("shopItems");
+    upgrades.forEach(up => {
+        const div = document.createElement("div");
+        div.className = "upgrade";
+        div.innerHTML = `
+            <strong>${up.name}</strong><br>
+            +${up.perClick} clic<br>
+            +${up.passive} sec<br>
+            Coût : ${up.cost}<br><br>
+            <button onclick='buyUpgrade(${JSON.stringify(up)})'>Acheter</button>
+        `;
+        shop.appendChild(div);
+    });
+}
+
+function buyUpgrade(up) {
+    if (points >= up.cost) {
+        points -= up.cost;
+        perClick += up.perClick;
+        passive += up.passive;
+        updateUI();
+    }
+}
+
+/* ⏱️ Passif */
+setInterval(() => {
+    points += passive;
+    if (passive > 0) updateUI();
+}, 1000);
+
+/* ☁️ Envoi score */
+setInterval(() => {
+    if (points > lastSentScore) {
+        db.collection("scores").doc(playerName).set({
+            score: Math.floor(points),
+            time: Date.now()
+        });
+        lastSentScore = points;
+    }
+}, 10000);
+
+/* 🏆 Classement */
+function loadLeaderboard() {
+    db.collection("scores")
+      .orderBy("score", "desc")
+      .limit(10)
+      .onSnapshot(snapshot => {
+          const list = document.getElementById("leaderboard");
+          list.innerHTML = "";
+          snapshot.forEach(doc => {
+              list.innerHTML += `<li>${doc.id} — ${doc.data().score}</li>`;
+          });
+      });
+}
+
+/* ⬅️ Toggle */
+function toggleLeaderboard() {
+    document.getElementById("leaderboardPanel").classList.toggle("hidden");
+}
+
+renderShop();
+loadLeaderboard();
+updateUI();
+</script>
+
+</body>
+</html>
