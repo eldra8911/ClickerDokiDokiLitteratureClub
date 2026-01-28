@@ -9,16 +9,21 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
+/* === BACKGROUND === */
+html {
+    height: 100%;
+    background: url("Club.png") no-repeat center center fixed;
+    background-size: cover;
+}
 body {
     margin: 0;
     font-family: monospace;
-    background: url("Club.png") no-repeat center center fixed;
-    background-size: cover;
     color: white;
 }
 
+/* === OVERLAY === */
 #overlay {
-    background: rgba(0,0,0,0.65);
+    background: rgba(0,0,0,0.25); /* laisse voir le background */
     min-height: 100vh;
     display: flex;
 }
@@ -30,11 +35,9 @@ body {
     padding: 10px;
     transition: transform 0.3s ease;
 }
-
 #leaderboardPanel.hidden {
     transform: translateX(-240px);
 }
-
 #toggleLeaderboard {
     cursor: pointer;
     color: #ff6fa9;
@@ -48,24 +51,21 @@ body {
     text-align: center;
     padding: 20px;
 }
-
 #logo {
     max-width: 380px;
     cursor: pointer;
     user-select: none;
 }
-
 .bounce {
     animation: bounce 0.25s ease;
 }
-
 @keyframes bounce {
     0% { transform: scale(1); }
     40% { transform: scale(0.95); }
     100% { transform: scale(1); }
 }
 
-/* === BOUTIQUE === */
+/* === BOUTIQUE DROITE === */
 #shop {
     width: 300px;
     background: rgba(0,0,0,0.9);
@@ -84,17 +84,16 @@ body {
     border: 1px solid #ff6fa9;
 }
 
+/* === TYPOGRAPHIE === */
 h2 {
     color: #ff6fa9;
     text-align: center;
 }
-
 .upgrade {
     border: 1px solid #444;
     padding: 10px;
     margin-bottom: 10px;
 }
-
 button {
     background: #1a1a1a;
     color: white;
@@ -102,12 +101,10 @@ button {
     padding: 8px 16px;
     cursor: pointer;
 }
-
 button:hover {
     background: #ff6fa9;
     color: black;
 }
-
 #leaderboard li {
     font-size: 14px;
     margin-bottom: 5px;
@@ -117,13 +114,12 @@ button:hover {
 
 <body>
 
-<!-- 🎵 AUDIO -->
+<!-- AUDIO -->
 <audio id="music" loop>
-    <source src="audio/Doki Doki Literature Club! OST - Doki Doki Literature Club! (Main Theme).mp3" type="audio/mpeg">
+    <source src="Doki Doki Literature Club! OST - Doki Doki Literature Club! (Main Theme).mp3" type="audio/mpeg">
 </audio>
-
 <audio id="clickSound">
-    <source src="audio/computer-mouse-click-351398.mp3" type="audio/mpeg">
+    <source src="computer-mouse-click-351398.mp3" type="audio/mpeg">
 </audio>
 
 <div id="overlay">
@@ -151,7 +147,7 @@ button:hover {
 
 </div>
 
-<!-- STATS -->
+<!-- STATS BAS GAUCHE -->
 <div id="statsBar">
     <div id="points">Points : 0</div>
     <div id="stats">Par clic : 1 | Auto : 0 / sec</div>
@@ -198,13 +194,16 @@ function clickLiterature() {
     const clickSound = document.getElementById("clickSound");
     const music = document.getElementById("music");
 
+    // bounce
     logo.classList.remove("bounce");
     void logo.offsetWidth;
     logo.classList.add("bounce");
 
+    // son clic
     clickSound.currentTime = 0;
     clickSound.play();
 
+    // musique
     if (!musicStarted) {
         music.volume = 0.5;
         music.play();
@@ -277,12 +276,11 @@ function toggleLeaderboard() {
     document.getElementById("leaderboardPanel").classList.toggle("hidden");
 }
 
+/* INITIALISATION */
 renderShop();
 loadLeaderboard();
 updateUI();
 </script>
 
 </body>
-
 </html>
-
