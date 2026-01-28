@@ -9,7 +9,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
-/* === BACKGROUND === */
 html {
     height: 100%;
     background: url("Club.png") no-repeat center center fixed;
@@ -20,15 +19,11 @@ body {
     font-family: monospace;
     color: white;
 }
-
-/* === OVERLAY === */
 #overlay {
-    background: rgba(0,0,0,0.25); /* laisse voir le background */
+    background: rgba(0,0,0,0.25);
     min-height: 100vh;
     display: flex;
 }
-
-/* === CLASSEMENT GAUCHE === */
 #leaderboardPanel {
     width: 260px;
     background: rgba(0,0,0,0.9);
@@ -44,8 +39,6 @@ body {
     text-align: right;
     font-size: 14px;
 }
-
-/* === CENTRE === */
 #main {
     flex: 1;
     text-align: center;
@@ -56,24 +49,14 @@ body {
     cursor: pointer;
     user-select: none;
 }
-.bounce {
-    animation: bounce 0.25s ease;
-}
-@keyframes bounce {
-    0% { transform: scale(1); }
-    40% { transform: scale(0.95); }
-    100% { transform: scale(1); }
-}
-
-/* === BOUTIQUE DROITE === */
+.bounce { animation: bounce 0.25s ease; }
+@keyframes bounce { 0%{scale:1}40%{scale:0.95}100%{scale:1} }
 #shop {
     width: 300px;
     background: rgba(0,0,0,0.9);
     padding: 15px;
     overflow-y: auto;
 }
-
-/* === STATS BAS GAUCHE === */
 #statsBar {
     position: fixed;
     bottom: 10px;
@@ -83,32 +66,11 @@ body {
     font-size: 14px;
     border: 1px solid #ff6fa9;
 }
-
-/* === TYPOGRAPHIE === */
-h2 {
-    color: #ff6fa9;
-    text-align: center;
-}
-.upgrade {
-    border: 1px solid #444;
-    padding: 10px;
-    margin-bottom: 10px;
-}
-button {
-    background: #1a1a1a;
-    color: white;
-    border: 1px solid #ff6fa9;
-    padding: 8px 16px;
-    cursor: pointer;
-}
-button:hover {
-    background: #ff6fa9;
-    color: black;
-}
-#leaderboard li {
-    font-size: 14px;
-    margin-bottom: 5px;
-}
+h2 { color: #ff6fa9; text-align: center; }
+.upgrade { border: 1px solid #444; padding: 10px; margin-bottom: 10px; }
+button { background: #1a1a1a; color: white; border: 1px solid #ff6fa9; padding: 8px 16px; cursor: pointer; }
+button:hover { background: #ff6fa9; color: black; }
+#leaderboard li { font-size: 14px; margin-bottom: 5px; }
 </style>
 </head>
 
@@ -118,21 +80,17 @@ button:hover {
 <audio id="music" loop>
     <source src="audio/Doki Doki Literature Club! OST - Doki Doki Literature Club! (Main Theme).mp3" type="audio/mpeg">
 </audio>
-
 <audio id="clickSound">
     <source src="audio/computer-mouse-click-351398.mp3" type="audio/mpeg">
 </audio>
 
 <div id="overlay">
-
-<!-- CLASSEMENT -->
 <div id="leaderboardPanel">
     <div id="toggleLeaderboard" onclick="toggleLeaderboard()">≪</div>
     <h2>Classement</h2>
     <ol id="leaderboard"></ol>
 </div>
 
-<!-- CENTRE -->
 <div id="main">
     <img id="logo"
          src="https://vignette.wikia.nocookie.net/doki-doki-literature-club/images/c/c9/Logo.png/revision/latest?cb=20171204125056"
@@ -140,22 +98,19 @@ button:hover {
     <p style="opacity:0.6;">Clique sur le logo</p>
 </div>
 
-<!-- BOUTIQUE -->
 <div id="shop">
     <h2>Boutique</h2>
     <div id="shopItems"></div>
 </div>
-
 </div>
 
-<!-- STATS BAS GAUCHE -->
 <div id="statsBar">
     <div id="points">Points : 0</div>
     <div id="stats">Par clic : 1 | Auto : 0 / sec</div>
 </div>
 
 <script>
-/* 🔥 FIREBASE */
+// 🔥 FIREBASE
 firebase.initializeApp({
   apiKey: "AIzaSyCugkmIHQfG527QDYEmeylRb-8yNBE-Qk0",
   authDomain: "dokidokilitteratureclub-61b4c.firebaseapp.com",
@@ -163,77 +118,94 @@ firebase.initializeApp({
 });
 const db = firebase.firestore();
 
-/* 👤 Joueur */
+// 👤 Compte joueur
 let playerName = localStorage.getItem("ddlc_name");
-if (!playerName) {
+let password = localStorage.getItem("ddlc_password");
+
+if (!playerName || !password) {
     playerName = prompt("Pseudo :");
+    password = prompt("Mot de passe :");
     localStorage.setItem("ddlc_name", playerName);
+    localStorage.setItem("ddlc_password", password);
 }
 
-/* 🎮 Stats */
+// 🎮 Stats
 let points = 0, perClick = 1, passive = 0;
-let musicStarted = false;
+let clickTimes = [], musicStarted = false;
 let lastSentScore = 0;
 
-/* 🛒 Upgrades */
+// 🛒 Upgrades
 const upgrades = [
   { name:"✒️ Stylo", cost:50, perClick:1, passive:0 },
   { name:"📓 Poème", cost:250, perClick:5, passive:0 },
   { name:"💾 Fichier .chr", cost:500, perClick:0, passive:2 }
 ];
 
-/* UI */
-function updateUI() {
-    document.getElementById("points").innerText = "Points : " + Math.floor(points);
-    document.getElementById("stats").innerText =
-        `Par clic : ${perClick} | Auto : ${passive} / sec`;
+// 🔄 Chargement du compte
+db.collection("players").doc(playerName).get().then(doc => {
+    if(doc.exists && doc.data().password === password){
+        points = doc.data().points;
+        perClick = doc.data().perClick;
+        passive = doc.data().passive;
+        updateUI();
+    } else {
+        savePlayerData(); // crée nouveau compte
+    }
+}).catch(() => {
+    // fallback si pas de connexion : charger backup local
+    const backup = JSON.parse(localStorage.getItem("ddlc_backup"));
+    if(backup){
+        points = backup.points;
+        perClick = backup.perClick;
+        passive = backup.passive;
+        updateUI();
+    }
+});
+
+// 🖱️ Fonctions
+function updateUI(){
+    document.getElementById("points").innerText = "Points : "+Math.floor(points);
+    document.getElementById("stats").innerText = `Par clic : ${perClick} | Auto : ${passive} / sec`;
 }
 
-/* 🖱️ CLIC */
-let clickTimes = []; // anti auto-clic
-
-function clickLiterature() {
+// Anti auto-clic + bounce + son + musique
+function clickLiterature(){
     const logo = document.getElementById("logo");
     const clickSound = document.getElementById("clickSound");
     const music = document.getElementById("music");
 
-    // bounce
     logo.classList.remove("bounce");
     void logo.offsetWidth;
     logo.classList.add("bounce");
 
-    // son clic
     clickSound.currentTime = 0;
     clickSound.play();
 
-    // musique
-    if (!musicStarted) {
+    if(!musicStarted){
         music.volume = 0.5;
         music.play();
         musicStarted = true;
     }
 
-    // 🖱️ Anti auto-clic
     const now = Date.now();
     clickTimes.push(now);
-    // garde que les clics de la dernière seconde
     clickTimes = clickTimes.filter(t => now - t < 1000);
 
     let gain = perClick;
-    if (clickTimes.length > 10) gain *= 0.2; // réduit le gain
-    if (clickTimes.length > 12) gain = 0;     // bloque totalement
+    if(clickTimes.length>12) gain *=0.2;
+    if(clickTimes.length>20) gain = 0;
 
     points += gain;
     updateUI();
 }
 
-/* 🛍️ Boutique */
-function renderShop() {
+// 🛍️ Boutique
+function renderShop(){
     const shop = document.getElementById("shopItems");
-    upgrades.forEach(up => {
+    upgrades.forEach(up=>{
         const div = document.createElement("div");
-        div.className = "upgrade";
-        div.innerHTML = `
+        div.className="upgrade";
+        div.innerHTML=`
             <strong>${up.name}</strong><br>
             +${up.perClick} clic<br>
             +${up.passive} sec<br>
@@ -243,53 +215,60 @@ function renderShop() {
         shop.appendChild(div);
     });
 }
-
-function buyUpgrade(up) {
-    if (points >= up.cost) {
-        points -= up.cost;
-        perClick += up.perClick;
-        passive += up.passive;
+function buyUpgrade(up){
+    if(points>=up.cost){
+        points-=up.cost;
+        perClick+=up.perClick;
+        passive+=up.passive;
         updateUI();
+        savePlayerData();
     }
 }
 
-/* ⏱️ Passif */
-setInterval(() => {
+// ⏱️ Passif
+setInterval(()=>{
     points += passive;
-    if (passive > 0) updateUI();
-}, 1000);
+    if(passive>0) updateUI();
+},1000);
 
-/* ☁️ Envoi score */
-setInterval(() => {
-    if (points > lastSentScore) {
-        db.collection("scores").doc(playerName).set({
-            score: Math.floor(points),
-            time: Date.now()
-        });
-        lastSentScore = points;
-    }
-}, 10000);
-
-/* 🏆 Classement */
-function loadLeaderboard() {
-    db.collection("scores")
-      .orderBy("score", "desc")
-      .limit(10)
-      .onSnapshot(snapshot => {
-          const list = document.getElementById("leaderboard");
-          list.innerHTML = "";
-          snapshot.forEach(doc => {
-              list.innerHTML += `<li>${doc.id} — ${doc.data().score}</li>`;
-          });
-      });
+// 🔄 Sauvegarde Firestore
+function savePlayerData(){
+    db.collection("players").doc(playerName).set({
+        password: password,
+        points: Math.floor(points),
+        perClick: perClick,
+        passive: passive,
+        time: Date.now()
+    });
+    localStorage.setItem("ddlc_backup", JSON.stringify({points, perClick, passive}));
 }
 
-/* ⬅️ Toggle */
-function toggleLeaderboard() {
+// 🔄 Envoi score classement
+setInterval(()=>{
+    savePlayerData();
+},10000);
+
+// 🏆 Classement
+function loadLeaderboard(){
+    db.collection("players").orderBy("points","desc").limit(10)
+    .onSnapshot(snapshot=>{
+        const list = document.getElementById("leaderboard");
+        list.innerHTML="";
+        snapshot.forEach(doc=>{
+            list.innerHTML+=`<li>${doc.id} — ${doc.data().points}</li>`;
+        });
+    });
+}
+
+// ⬅️ Toggle leaderboard
+function toggleLeaderboard(){
     document.getElementById("leaderboardPanel").classList.toggle("hidden");
 }
 
-/* INITIALISATION */
+// Backup local à la fermeture
+window.addEventListener("beforeunload", savePlayerData);
+
+// Initialisation
 renderShop();
 loadLeaderboard();
 updateUI();
@@ -297,4 +276,3 @@ updateUI();
 
 </body>
 </html>
-
