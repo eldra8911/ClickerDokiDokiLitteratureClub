@@ -190,6 +190,8 @@ function updateUI() {
 }
 
 /* 🖱️ CLIC */
+let clickTimes = []; // anti auto-clic
+
 function clickLiterature() {
     const logo = document.getElementById("logo");
     const clickSound = document.getElementById("clickSound");
@@ -211,7 +213,17 @@ function clickLiterature() {
         musicStarted = true;
     }
 
-    points += perClick;
+    // 🖱️ Anti auto-clic
+    const now = Date.now();
+    clickTimes.push(now);
+    // garde que les clics de la dernière seconde
+    clickTimes = clickTimes.filter(t => now - t < 1000);
+
+    let gain = perClick;
+    if (clickTimes.length > 10) gain *= 0.2; // réduit le gain
+    if (clickTimes.length > 12) gain = 0;     // bloque totalement
+
+    points += gain;
     updateUI();
 }
 
@@ -285,3 +297,4 @@ updateUI();
 
 </body>
 </html>
+
