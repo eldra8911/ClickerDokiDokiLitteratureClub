@@ -2,241 +2,338 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Doki Doki Clicker</title>
+<title>Literature.exe</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <style>
-    body {
-        margin: 0;
-        background: url("Club.png") center/cover no-repeat fixed;
-        font-family: Arial, sans-serif;
-        color: white;
-        overflow: hidden;
-    }
-
-    #logo {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        cursor: pointer;
-        transition: transform 0.15s;
-    }
-
-    #logo:active {
-        transform: translate(-50%, -50%) scale(0.95);
-    }
-
-    #stats {
-        position: absolute;
-        bottom: 20px;
-        left: 20px;
-        background: rgba(0,0,0,0.6);
-        padding: 12px 18px;
-        border-radius: 12px;
-        min-width: 220px;
-    }
-
-    #shop {
-        position: absolute;
-        right: 20px;
-        top: 80px;
-        background: rgba(0,0,0,0.7);
-        padding: 15px;
-        border-radius: 12px;
-        width: 260px;
-    }
-
-    .item {
-        margin-bottom: 10px;
-        padding: 8px;
-        background: rgba(255,255,255,0.1);
-        border-radius: 8px;
-        cursor: pointer;
-    }
-
-    .item.disabled {
-        opacity: 0.4;
-        pointer-events: none;
-    }
-
-    #leaderboard {
-        position: absolute;
-        left: 20px;
-        top: 80px;
-        background: rgba(0,0,0,0.7);
-        padding: 15px;
-        border-radius: 12px;
-        width: 220px;
-    }
-
-    #codes {
-        position: absolute;
-        right: 20px;
-        bottom: 20px;
-        width: 360px;
-    }
-
-    .codeBox {
-        background: rgba(255,105,180,0.85);
-        color: black;
-        padding: 10px;
-        margin-top: 8px;
-        border-radius: 10px;
-        font-size: 12px;
-        word-break: break-all;
-    }
-
-    .notif {
-        position: absolute;
-        bottom: 20px;
-        right: 20px;
-        background: hotpink;
-        color: black;
-        padding: 10px 15px;
-        border-radius: 12px;
-        animation: fadeout 3s forwards;
-    }
-
-    @keyframes fadeout {
-        0% {opacity: 1;}
-        100% {opacity: 0;}
-    }
+html {
+    height: 100%;
+    background: url("Club.png") no-repeat center center fixed;
+    background-size: cover;
+}
+body {
+    margin: 0;
+    font-family: monospace;
+    color: white;
+}
+#overlay {
+    background: rgba(0,0,0,0.25);
+    min-height: 100vh;
+    display: flex;
+}
+/* Classement gauche */
+#leaderboardPanel {
+    width: 260px;
+    background: rgba(255,182,193,0.85);
+    padding: 10px;
+    transition: transform 0.3s ease;
+}
+#leaderboardPanel.hidden { transform: translateX(-240px); }
+#toggleLeaderboard {
+    cursor: pointer;
+    color: #ff6fa9;
+    text-align: right;
+    font-size: 14px;
+}
+/* Centre */
+#main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 20px;
+}
+#logo {
+    max-width: 380px;
+    cursor: pointer;
+    user-select: none;
+}
+.bounce { animation: bounce 0.25s ease; }
+@keyframes bounce { 0%{scale:1}40%{scale:0.95}100%{scale:1} }
+/* Boutique droite */
+#shop {
+    width: 300px;
+    background: rgba(0,0,0,0.9);
+    padding: 15px;
+    overflow-y: auto;
+}
+/* Stats bas gauche */
+#statsBar {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.85);
+    padding: 10px 15px;
+    font-size: 14px;
+    border: 1px solid #ff6fa9;
+    min-width: 180px;
+    max-width: 300px;
+    transition: width 0.3s ease, padding 0.3s ease;
+}
+/* Toast succès */
+.toast {
+    position: fixed;
+    bottom: 70px;
+    right: 20px;
+    background: rgba(255,105,180,0.95);
+    padding: 12px 18px;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #fff;
+    box-shadow: 0 0 12px #ff69b4aa;
+    opacity: 0;
+    transition: opacity 0.4s, transform 0.4s;
+}
+.toast.show {
+    opacity: 1;
+    transform: translateY(-10px);
+}
+h2 { color: #ff6fa9; text-align: center; }
+.upgrade { border: 1px solid #444; padding: 10px; margin-bottom: 10px; }
+button { background: #1a1a1a; color: white; border: 1px solid #ff6fa9; padding: 8px 16px; cursor: pointer; }
+button:hover { background: #ff6fa9; color: black; }
+#leaderboard li { font-size: 14px; margin-bottom: 5px; }
+#loginPanel {
+    position: fixed;
+    top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.9);
+    display:flex; align-items:center; justify-content:center; flex-direction:column;
+    color:white; font-family:monospace; z-index:100;
+}
+#loginPanel input { margin:6px 0; padding:6px; width:200px; border:1px solid #ff6fa9; background:#1a1a1a; color:white; }
+#loginPanel button { margin-top:10px; }
 </style>
 </head>
 
 <body>
 
-<img id="logo" src="Club.png" width="220">
+<!-- Audio -->
+<audio id="music" loop>
+    <source src="audio/Doki Doki Literature Club! OST - Doki Doki Literature Club! (Main Theme).mp3" type="audio/mpeg">
+</audio>
+<audio id="clickSound">
+    <source src="audio/computer-mouse-click-351398.mp3" type="audio/mpeg">
+</audio>
 
-<div id="leaderboard">
-    <b>🏆 Classement</b>
-    <div id="lbContent"></div>
+<!-- Login -->
+<div id="loginPanel">
+    <h2>Literature.exe - Connexion</h2>
+    <input id="loginName" type="text" placeholder="Pseudo">
+    <input id="loginPass" type="password" placeholder="Mot de passe">
+    <button onclick="login()">Connexion / Créer compte</button>
+</div>
+
+<!-- Overlay principal -->
+<div id="overlay" style="display:none;">
+<div id="leaderboardPanel">
+    <div id="toggleLeaderboard" onclick="toggleLeaderboard()">≪</div>
+    <h2>Classement</h2>
+    <ol id="leaderboard"></ol>
+</div>
+
+<div id="main">
+    <img id="logo"
+         src="https://vignette.wikia.nocookie.net/doki-doki-literature-club/images/c/c9/Logo.png/revision/latest?cb=20171204125056"
+         onclick="clickLiterature()">
+    <p style="opacity:0.6;">Clique sur le logo</p>
 </div>
 
 <div id="shop">
-    <b>🛒 Boutique</b>
+    <h2>Boutique</h2>
     <div id="shopItems"></div>
 </div>
-
-<div id="stats">
-    👤 <span id="playerName"></span><br>
-    📚 Points : <span id="points">0</span><br>
-    🏆 Score : <span id="score">0</span>
 </div>
 
-<div id="codes"></div>
+<div id="statsBar">
+    <div id="points">Points : 0</div>
+    <div id="stats">Par clic : 1 | Auto : 0 / sec</div>
+</div>
 
-<audio id="music" src="audio/Doki Doki Literature Club! OST - Doki Doki Literature Club! (Main Theme).mp3" loop></audio>
-<audio id="clickSound" src="audio/computer-mouse-click-351398.mp3"></audio>
+<div id="toastContainer"></div>
 
 <script>
-/* ================== CONFIG ================== */
-const MAX_CLICKS_PER_SECOND = 10;
+// 🔥 Firebase
+firebase.initializeApp({
+  apiKey: "AIzaSyCugkmIHQfG527QDYEmeylRb-8yNBE-Qk0",
+  authDomain: "dokidokilitteratureclub-61b4c.firebaseapp.com",
+  projectId: "dokidokilitteratureclub-61b4c"
+});
+const db = firebase.firestore();
 
-/* ================== DATA ================== */
-let player = localStorage.getItem("player") || prompt("Pseudo ?");
-let points = Number(localStorage.getItem("points")) || 0;
-let score = Number(localStorage.getItem("score")) || 0;
-let ownedRewards = JSON.parse(localStorage.getItem("rewards") || "{}");
+// 👤 Joueur
+let playerName, encodedPwd;
+let points=0, perClick=1, passive=0, totalPointsGained=0, purchaseBonus=0;
+let clickTimes=[], musicStarted=false;
 
-let clickTimes = [];
-
-/* ================== INIT ================== */
-document.getElementById("playerName").innerText = player;
-document.getElementById("music").volume = 0.4;
-document.getElementById("music").play().catch(()=>{});
-
-/* ================== CLICK ================== */
-document.getElementById("logo").onclick = () => {
-    const now = Date.now();
-    clickTimes = clickTimes.filter(t => now - t < 1000);
-    if (clickTimes.length >= MAX_CLICKS_PER_SECOND) return;
-
-    clickTimes.push(now);
-
-    points++;
-    score += 0.001;
-
-    document.getElementById("clickSound").currentTime = 0;
-    document.getElementById("clickSound").play();
-
-    update();
-};
-
-/* ================== SHOP ================== */
-const shop = [
-    {id:"pen", name:"Stylo", cost:50, score:0.1, once:false},
-    {id:"poem", name:"Poème", cost:250, score:0.2, once:false},
-    {id:"yuri", name:"YURI.chr", cost:10000, score:1, once:true}
+// 🍬 Achievements
+const achievements = [
+  { id:"first_click", title:"Premiers mots", description:"Gagner 10 points", pointsBonus:0.1, condition:()=>totalPointsGained>=10 },
+  { id:"writer", title:"Écrivain", description:"Gagner 1000 points", pointsBonus:0.5, condition:()=>totalPointsGained>=1000 },
+  { id:"poet", title:"Poète", description:"Acheter un poème", pointsBonus:0.2, condition:()=>purchaseBonus>=0.2 }
 ];
+let unlockedAchievements=[];
 
-function renderShop() {
-    const s = document.getElementById("shopItems");
-    s.innerHTML = "";
-    shop.forEach(item => {
-        const div = document.createElement("div");
-        div.className = "item";
-        if (item.once && ownedRewards[item.id]) div.classList.add("disabled");
-        div.innerText = `${item.name} (${item.cost})`;
-        div.onclick = () => buy(item);
-        s.appendChild(div);
+// 🔄 Login
+function login(){
+    const name=document.getElementById("loginName").value.trim();
+    const pass=document.getElementById("loginPass").value;
+    if(!name||!pass){ alert("Remplir les deux champs"); return; }
+    playerName=name;
+    encodedPwd=btoa(pass); // simple hash
+    localStorage.setItem("ddlc_name",playerName);
+    localStorage.setItem("ddlc_password",encodedPwd);
+    document.getElementById("loginPanel").style.display="none";
+    document.getElementById("overlay").style.display="flex";
+    initPlayer();
+}
+
+// 🔄 Charger / créer compte
+function initPlayer(){
+    db.collection("players").doc(playerName).get().then(doc=>{
+        if(doc.exists && doc.data().password===encodedPwd){
+            const data=doc.data();
+            points=data.points;
+            perClick=data.perClick;
+            passive=data.passive;
+            totalPointsGained=data.totalPointsGained||points;
+            purchaseBonus=data.purchaseBonus||0;
+            unlockedAchievements=data.unlockedAchievements||[];
+            updateUI();
+        }else{ savePlayerData(); }
+        renderShop(); loadLeaderboard(); updateUI();
+    }).catch(()=>{ // fallback local
+        const backup=JSON.parse(localStorage.getItem("ddlc_backup"));
+        if(backup){ points=backup.points; perClick=backup.perClick; passive=backup.passive; totalPointsGained=backup.totalPointsGained||points; purchaseBonus=backup.purchaseBonus||0; unlockedAchievements=backup.unlockedAchievements||[]; updateUI(); }
+        renderShop(); loadLeaderboard();
     });
 }
 
-function buy(item) {
-    if (points < item.cost) return;
-    points -= item.cost;
-    score += item.score;
+// UI
+function updateUI(){
+    document.getElementById("points").innerText="Points : "+Math.floor(points);
+    document.getElementById("stats").innerText=`Par clic : ${perClick} | Auto : ${passive} / sec`;
+    const statsBar=document.getElementById("statsBar");
+    statsBar.style.width=Math.min(300, 180+Math.floor(document.getElementById("points").innerText.length*6))+"px";
+}
 
-    if (item.once) {
-        const code = generateCode(player, item.id);
-        ownedRewards[item.id] = code;
-        showCode(code);
-        notify("🎁 Récompense débloquée !");
+// Anti auto-clic + bounce + son + musique
+function clickLiterature(){
+    const logo=document.getElementById("logo");
+    const clickSound=document.getElementById("clickSound");
+    const music=document.getElementById("music");
+
+    logo.classList.remove("bounce"); void logo.offsetWidth; logo.classList.add("bounce");
+    clickSound.currentTime=0; clickSound.play();
+    if(!musicStarted){ music.volume=0.5; music.play(); musicStarted=true; }
+
+    const now=Date.now();
+    clickTimes.push(now);
+    clickTimes=clickTimes.filter(t=>now-t<1000);
+
+    let gain=perClick;
+    if(clickTimes.length>12) gain*=0.2;
+    if(clickTimes.length>20) gain=0;
+
+    points+=gain;
+    totalPointsGained+=gain;
+    updateUI();
+    checkAchievements();
+}
+
+// Boutique
+const upgrades=[
+  { name:"✒️ Stylo", cost:50, perClick:1, passive:0, bonus:0.1 },
+  { name:"📓 Poème", cost:250, perClick:5, passive:0, bonus:0.2 },
+  { name:"💾 Fichier .chr", cost:500, perClick:0, passive:2, bonus:0.5 }
+];
+function renderShop(){
+    const shop=document.getElementById("shopItems");
+    shop.innerHTML="";
+    upgrades.forEach(up=>{
+        const div=document.createElement("div");
+        div.className="upgrade";
+        div.innerHTML=`
+            <strong>${up.name}</strong><br>
+            +${up.perClick} clic<br>
+            +${up.passive} sec<br>
+            Coût : ${up.cost}<br><br>
+            <button onclick='buyUpgrade(${JSON.stringify(up)})'>Acheter</button>
+        `;
+        shop.appendChild(div);
+    });
+}
+function buyUpgrade(up){
+    if(points>=up.cost){
+        points-=up.cost;
+        perClick+=up.perClick;
+        passive+=up.passive;
+        purchaseBonus+=up.bonus;
+        animateUpgrade(up);
+        updateUI();
+        savePlayerData();
+        checkAchievements();
     }
-
-    save();
-    renderShop();
+}
+function animateUpgrade(up){
+    alert(`✨ Vous avez acheté ${up.name} !`); // simple pour l'instant, plus tard animation visuelle
 }
 
-/* ================== CODE ================== */
-function generateCode(player, reward) {
-    const time = Date.now();
-    const rand = Math.random().toString(36).substring(2,6).toUpperCase();
-    return `DDLC|PLAYER=${player}|REWARD=${reward}|TIME=${time}|RAND=${rand}`;
+// Passif
+setInterval(()=>{ points+=passive; totalPointsGained+=passive; if(passive>0) updateUI(); checkAchievements(); },1000);
+
+// Sauvegarde
+function savePlayerData(){
+    db.collection("players").doc(playerName).set({
+        password:encodedPwd, points:Math.floor(points), perClick, passive,
+        totalPointsGained, purchaseBonus, unlockedAchievements
+    });
+    localStorage.setItem("ddlc_backup", JSON.stringify({points, perClick, passive, totalPointsGained, purchaseBonus, unlockedAchievements}));
 }
 
-function showCode(code) {
-    const box = document.createElement("div");
-    box.className = "codeBox";
-    box.innerText = code;
-    document.getElementById("codes").appendChild(box);
+// Achievements
+function showToast(title,msg){ 
+    const toast=document.createElement("div");
+    toast.className="toast";
+    toast.innerHTML=`<strong>${title}</strong><br>${msg}`;
+    document.body.appendChild(toast);
+    setTimeout(()=>{ toast.classList.add("show"); },10);
+    setTimeout(()=>{ toast.classList.remove("show"); setTimeout(()=>toast.remove(),400); },4000);
+}
+function checkAchievements(){
+    achievements.forEach(a=>{
+        if(a.condition() && !unlockedAchievements.includes(a.id)){
+            unlockedAchievements.push(a.id);
+            points+=a.pointsBonus; // donne points classement
+            showToast(a.title,a.description);
+            savePlayerData();
+        }
+    });
 }
 
-/* ================== UI ================== */
-function notify(txt) {
-    const n = document.createElement("div");
-    n.className = "notif";
-    n.innerText = txt;
-    document.body.appendChild(n);
-    setTimeout(()=>n.remove(),3000);
+// Score
+function getScore(){ return totalPointsGained/1000+purchaseBonus; }
+
+// Classement
+function loadLeaderboard(){
+    db.collection("players").orderBy("points","desc").limit(15).onSnapshot(snapshot=>{
+        const list=document.getElementById("leaderboard");
+        list.innerHTML="";
+        snapshot.forEach(doc=>{
+            const data=doc.data();
+            const score=(data.totalPointsGained/1000)+(data.purchaseBonus||0);
+            list.innerHTML+=`<li>${doc.id} — ${score.toFixed(2)}</li>`;
+        });
+    });
 }
 
-function update() {
-    document.getElementById("points").innerText = Math.floor(points);
-    document.getElementById("score").innerText = score.toFixed(2);
-    save();
-}
+// Toggle leaderboard
+function toggleLeaderboard(){ document.getElementById("leaderboardPanel").classList.toggle("hidden"); }
 
-function save() {
-    localStorage.setItem("player", player);
-    localStorage.setItem("points", points);
-    localStorage.setItem("score", score);
-    localStorage.setItem("rewards", JSON.stringify(ownedRewards));
-}
-
-/* ================== START ================== */
-renderShop();
-update();
+window.addEventListener("beforeunload", savePlayerData);
 </script>
 
 </body>
