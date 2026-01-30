@@ -7,168 +7,316 @@
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script>
 
 <style>
+html {
+    height: 100%;
+    background: url("Club.png") no-repeat center center fixed;
+    background-size: cover;
+}
 body {
-  margin:0;
-  font-family: monospace;
-  background:url("Club.png") center/cover fixed;
-  color:white;
+    margin: 0;
+    font-family: monospace;
+    color: white;
 }
-#overlay { background:rgba(0,0,0,.65); min-height:100vh; display:flex; }
-#left { width:260px; background:#000c; padding:10px; }
-#main { flex:1; text-align:center; }
-#right { width:300px; background:#000c; padding:10px; }
+#overlay {
+    background: rgba(0,0,0,0.35);
+    min-height: 100vh;
+    display: flex;
+}
 
-button { background:#1a1a1a; color:white; border:1px solid #ff6fa9; padding:8px; cursor:pointer; }
-button:disabled { opacity:.4; cursor:not-allowed; }
-.reward { border:1px solid #555; padding:8px; margin-bottom:8px; }
-.codeBox { background:#111; padding:6px; word-break:break-all; margin-top:5px; }
-.toast {
-  position:fixed; bottom:20px; right:20px;
-  background:#ff6fa9; color:black;
-  padding:10px 15px; border-radius:6px;
-  animation:fade 4s forwards;
+/* ---------- LEADERBOARD ---------- */
+#leaderboardPanel {
+    width: 260px;
+    background: rgba(255,182,193,0.9);
+    padding: 10px;
+    transition: transform 0.3s ease;
 }
-@keyframes fade {
-  0%{opacity:0;transform:translateY(10px)}
-  10%{opacity:1}
-  90%{opacity:1}
-  100%{opacity:0;transform:translateY(10px)}
+#leaderboardPanel.hidden { transform: translateX(-240px); }
+#toggleLeaderboard {
+    cursor: pointer;
+    color: #ff4fa3;
+    text-align: right;
+    font-size: 14px;
+}
+
+/* ---------- MAIN ---------- */
+#main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+#logo {
+    max-width: 380px;
+    cursor: pointer;
+    user-select: none;
+}
+.bounce { animation: bounce 0.25s ease; }
+@keyframes bounce {
+    0% { transform: scale(1); }
+    40% { transform: scale(0.94); }
+    100% { transform: scale(1); }
+}
+
+/* ---------- SHOP ---------- */
+#shop {
+    width: 300px;
+    background: rgba(0,0,0,0.9);
+    padding: 15px;
+    overflow-y: auto;
+}
+.upgrade {
+    border: 1px solid #444;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+button {
+    background: #1a1a1a;
+    color: white;
+    border: 1px solid #ff6fa9;
+    padding: 6px 14px;
+    cursor: pointer;
+}
+button:hover {
+    background: #ff6fa9;
+    color: black;
+}
+
+/* ---------- STATS ---------- */
+#statsBar {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.85);
+    padding: 10px 15px;
+    border: 1px solid #ff6fa9;
+    font-size: 14px;
+    max-width: 320px;
+}
+
+/* ---------- TOAST ---------- */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(255,105,180,0.95);
+    padding: 12px 18px;
+    border-radius: 6px;
+    font-size: 14px;
+    box-shadow: 0 0 12px #ff69b4aa;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.4s ease;
+}
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ---------- LOGIN ---------- */
+#loginPanel {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+#loginPanel input {
+    margin: 6px;
+    padding: 6px;
+    background: #111;
+    border: 1px solid #ff6fa9;
+    color: white;
 }
 </style>
 </head>
 
 <body>
 
-<div id="overlay">
+<!-- AUDIO -->
+<audio id="music" loop>
+    <source src="audio/Doki Doki Literature Club! OST - Doki Doki Literature Club! (Main Theme).mp3">
+</audio>
+<audio id="clickSound">
+    <source src="audio/computer-mouse-click-351398.mp3">
+</audio>
 
-<div id="left">
-  <h3>🏆 Classement</h3>
-  <ol id="leaderboard"></ol>
+<!-- LOGIN -->
+<div id="loginPanel">
+    <h2>Literature.exe</h2>
+    <input id="loginName" placeholder="Pseudo">
+    <input id="loginPass" type="password" placeholder="Mot de passe">
+    <button onclick="login()">Connexion / Créer</button>
 </div>
 
+<div id="overlay" style="display:none">
+
+<!-- LEADERBOARD -->
+<div id="leaderboardPanel">
+    <div id="toggleLeaderboard" onclick="toggleLeaderboard()">≪</div>
+    <h3>Classement</h3>
+    <ol id="leaderboard"></ol>
+</div>
+
+<!-- MAIN -->
 <div id="main">
-  <img src="Logo.png" width="350"><br><br>
-  <div id="points">0 PL</div>
-  <button onclick="clickLiterature()">CLIC</button>
+    <img id="logo" src="https://vignette.wikia.nocookie.net/doki-doki-literature-club/images/c/c9/Logo.png/revision/latest?cb=20171204125056"
+         onclick="clickLiterature()">
+    <p style="opacity:.6">Clique sur le logo</p>
 </div>
 
-<div id="right">
-  <h3>🛒 Améliorations</h3>
-  <div id="shop"></div>
-
-  <h3>🎁 Récompenses</h3>
-  <div id="rewards"></div>
-
-  <h3>🎟️ Codes obtenus</h3>
-  <div id="codes"></div>
+<!-- SHOP -->
+<div id="shop">
+    <h3>Boutique</h3>
+    <div id="shopItems"></div>
+</div>
 </div>
 
+<!-- STATS -->
+<div id="statsBar">
+    <div id="points">Points : 0</div>
+    <div id="stats">Par clic : 1 | Auto : 0 / sec</div>
 </div>
 
 <script>
-/* 🔥 Firebase config */
+/* ---------------- FIREBASE ---------------- */
 firebase.initializeApp({
-  apiKey: "TA_API_KEY",
+  apiKey: "AIzaSyCugkmIHQfG527QDYEmeylRb-8yNBE-Qk0",
   authDomain: "dokidokilitteratureclub-61b4c.firebaseapp.com",
   projectId: "dokidokilitteratureclub-61b4c"
 });
-
 const db = firebase.firestore();
-const functions = firebase.functions();
 
-/* 👤 Joueur */
-let player = localStorage.getItem("player");
-if(!player){
-  player = prompt("Pseudo :");
-  localStorage.setItem("player", player);
+/* ---------------- PLAYER ---------------- */
+let playerName, encodedPwd;
+let points=0, perClick=1, passive=0;
+let totalPointsGained=0, purchaseBonus=0;
+let clickTimes=[], musicStarted=false;
+
+/* ---------------- TOAST ---------------- */
+function toast(title, msg) {
+    const t = document.createElement("div");
+    t.className = "toast";
+    t.innerHTML = `<strong>${title}</strong><br>${msg}`;
+    document.body.appendChild(t);
+    setTimeout(()=>t.classList.add("show"),10);
+    setTimeout(()=>{ t.classList.remove("show"); setTimeout(()=>t.remove(),400); },4000);
 }
 
-/* 🎮 Stats */
-let points = 0;
-let perClick = 1;
-let passive = 0;
-let ownedRewards = JSON.parse(localStorage.getItem("rewards")||"{}");
-
-/* 🛍️ Upgrades */
-const upgrades = [
-  { id:"pen", name:"✒️ Stylo", cost:50, perClick:1 },
-  { id:"poem", name:"📓 Poème", cost:250, perClick:5 }
-];
-
-/* 🎁 Récompenses */
-const rewards = [
-  { id:"YURI", name:"🩸 Yuri.chr", cost:10000, rewardType:"BLK", rewardAmount:1000 }
-];
-
-function toast(msg){
-  const t=document.createElement("div");
-  t.className="toast"; t.innerText=msg;
-  document.body.appendChild(t);
-  setTimeout(()=>t.remove(),4000);
+/* ---------------- LOGIN ---------------- */
+function login(){
+    playerName = loginName.value.trim();
+    encodedPwd = btoa(loginPass.value);
+    if(!playerName || !loginPass.value) return;
+    localStorage.setItem("ddlc_user", playerName);
+    localStorage.setItem("ddlc_pwd", encodedPwd);
+    document.getElementById("loginPanel").style.display="none";
+    document.getElementById("overlay").style.display="flex";
+    initPlayer();
 }
 
+/* ---------------- LOAD PLAYER ---------------- */
+function initPlayer(){
+    db.collection("players").doc(playerName).get().then(doc=>{
+        if(doc.exists && doc.data().pwd===encodedPwd){
+            Object.assign(window, doc.data().save);
+        }
+        updateUI();
+        renderShop();
+        loadLeaderboard();
+    });
+}
+
+/* ---------------- UI ---------------- */
+function updateUI(){
+    pointsEl.innerText = "Points : " + Math.floor(points);
+    stats.innerText = `Par clic : ${perClick} | Auto : ${passive} / sec`;
+}
+
+/* ---------------- CLICK ---------------- */
 function clickLiterature(){
-  points+=perClick;
-  document.getElementById("points").innerText = points+" PL";
+    const now = Date.now();
+    clickTimes.push(now);
+    clickTimes = clickTimes.filter(t => now - t < 1000);
+
+    let gain = perClick;
+    if(clickTimes.length > 10) gain *= 0.2;
+    if(clickTimes.length > 10) gain = 0;
+
+    points += gain;
+    totalPointsGained += gain;
+
+    logo.classList.remove("bounce"); void logo.offsetWidth;
+    logo.classList.add("bounce");
+    clickSound.currentTime=0; clickSound.play();
+    if(!musicStarted){ music.volume=0.5; music.play(); musicStarted=true; }
+
+    updateUI();
 }
+
+/* ---------------- SHOP ---------------- */
+const upgrades = [
+ {name:"✒️ Stylo", cost:50, perClick:1, passive:0, bonus:0.1},
+ {name:"📓 Poème", cost:250, perClick:5, passive:0, bonus:0.2},
+ {name:"💾 Fichier .chr", cost:500, perClick:0, passive:2, bonus:0.5}
+];
 
 function renderShop(){
-  const s=document.getElementById("shop");
-  upgrades.forEach(u=>{
-    const b=document.createElement("button");
-    b.innerText=`${u.name} (${u.cost})`;
-    b.onclick=()=>{ if(points>=u.cost){points-=u.cost; perClick+=u.perClick; toast("Amélioration achetée");}};
-    s.appendChild(b);
-  });
+    shopItems.innerHTML="";
+    upgrades.forEach(up=>{
+        const d=document.createElement("div");
+        d.className="upgrade";
+        d.innerHTML=`
+            <strong>${up.name}</strong><br>
+            +${up.perClick} clic / +${up.passive} sec<br>
+            Coût : ${up.cost}<br><br>
+            <button onclick='buyUpgrade(${JSON.stringify(up)})'>Acheter</button>`;
+        shopItems.appendChild(d);
+    });
 }
 
-function renderRewards(){
-  const r=document.getElementById("rewards");
-  r.innerHTML="";
-  rewards.forEach(rew=>{
-    const d=document.createElement("div");
-    d.className="reward";
-    const owned=ownedRewards[rew.id];
-    d.innerHTML=`<strong>${rew.name}</strong><br>Coût:${rew.cost}<br>`;
-    const b=document.createElement("button");
-    b.innerText=owned?"Déjà débloqué":"Débloquer";
-    b.disabled=owned;
-    b.onclick=()=>buyReward(rew);
-    d.appendChild(b);
-    r.appendChild(d);
-  });
+function buyUpgrade(up){
+    if(points>=up.cost){
+        points-=up.cost;
+        perClick+=up.perClick;
+        passive+=up.passive;
+        purchaseBonus+=up.bonus;
+        toast("Achat effectué", up.name + " acquis !");
+        updateUI();
+    }
 }
 
-async function buyReward(rew){
-  if(points<rew.cost) return;
-  const generate = functions.httpsCallable("generateRewardCode");
-  const res = await generate({
-    player,
-    rewardId: rew.id,
-    type: rew.rewardType,
-    amount: rew.rewardAmount
-  });
-  ownedRewards[rew.id]=res.data.code;
-  localStorage.setItem("rewards",JSON.stringify(ownedRewards));
-  showCodes();
-  renderRewards();
-  toast("🎁 Récompense débloquée !");
+/* ---------------- PASSIVE ---------------- */
+setInterval(()=>{ points+=passive; totalPointsGained+=passive; updateUI(); },1000);
+
+/* ---------------- SAVE ---------------- */
+setInterval(()=>{
+    db.collection("players").doc(playerName).set({
+        pwd: encodedPwd,
+        save:{points,perClick,passive,totalPointsGained,purchaseBonus}
+    });
+},8000);
+
+/* ---------------- LEADERBOARD ---------------- */
+function loadLeaderboard(){
+    db.collection("players").onSnapshot(snap=>{
+        leaderboard.innerHTML="";
+        snap.forEach(d=>{
+            const s = d.data().save;
+            const score = (s.totalPointsGained/1000 + s.purchaseBonus).toFixed(2);
+            leaderboard.innerHTML += `<li>${d.id} — ${score}</li>`;
+        });
+    });
 }
 
-function showCodes(){
-  const c=document.getElementById("codes");
-  c.innerHTML="";
-  for(const id in ownedRewards){
-    c.innerHTML+=`<div class="codeBox">${ownedRewards[id]}</div>`;
-  }
+function toggleLeaderboard(){
+    leaderboardPanel.classList.toggle("hidden");
 }
-
-renderShop();
-renderRewards();
-showCodes();
 </script>
 
 </body>
