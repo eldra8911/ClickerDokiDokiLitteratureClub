@@ -4,336 +4,507 @@
 <meta charset="UTF-8">
 <title>Literature.exe</title>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
 <style>
-html {
-    height: 100%;
-    background: url("Club.png") no-repeat center center fixed;
-    background-size: cover;
-}
-body {
+html, body {
     margin: 0;
+    height: 100%;
+    overflow: hidden;
     font-family: monospace;
     color: white;
 }
-#overlay {
-    background: rgba(0,0,0,0.25);
-    min-height: 100vh;
-    display: flex;
+
+body {
+    background: url("Club.png") center / cover no-repeat fixed;
 }
-/* Classement gauche */
+
+#overlay {
+    display: flex;
+    height: 100vh;
+}
+
+/* ===== CLASSEMENT ===== */
 #leaderboardPanel {
     width: 260px;
     background: rgba(255,182,193,0.85);
     padding: 10px;
-    transition: transform 0.3s ease;
+    box-sizing: border-box;
 }
-#leaderboardPanel.hidden { transform: translateX(-240px); }
-#toggleLeaderboard {
-    cursor: pointer;
-    color: #ff6fa9;
-    text-align: right;
-    font-size: 14px;
+
+#leaderboardPanel h2 {
+    margin-top: 0;
 }
-/* Centre */
+
+#leaderboard {
+    padding-left: 20px;
+    color: black;
+}
+
+/* ===== CENTRE ===== */
 #main {
     flex: 1;
     display: flex;
-    align-items: center;
-    justify-content: center;
     flex-direction: column;
-    padding: 20px;
+    justify-content: center;
+    align-items: center;
 }
+
 #logo {
-    max-width: 380px;
+    width: 360px;
     cursor: pointer;
-    user-select: none;
 }
-.bounce { animation: bounce 0.25s ease; }
-@keyframes bounce { 0%{scale:1}40%{scale:0.95}100%{scale:1} }
-/* Boutique droite */
+
+.bounce {
+    animation: bounce 0.2s ease;
+}
+
+@keyframes bounce {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.95); }
+    100% { transform: scale(1); }
+}
+
+/* ===== BOUTIQUE ===== */
 #shop {
-    width: 300px;
+    width: 320px;
     background: rgba(0,0,0,0.9);
-    padding: 15px;
-    overflow-y: auto;
+    padding: 10px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
 }
-/* Stats bas gauche */
+
+.shopSection {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 10px;
+}
+
+.upgrade {
+    border: 1px solid #444;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+button {
+    width: 100%;
+    background: black;
+    color: white;
+    border: 1px solid #ff6fa9;
+    padding: 6px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #ff6fa9;
+    color: black;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ===== STATS ===== */
 #statsBar {
     position: fixed;
     bottom: 10px;
     left: 10px;
     background: rgba(0,0,0,0.85);
-    padding: 10px 15px;
-    font-size: 14px;
     border: 1px solid #ff6fa9;
-    min-width: 180px;
-    max-width: 300px;
-    transition: width 0.3s ease, padding 0.3s ease;
+    padding: 10px;
+    font-size: 14px;
 }
-/* Toast succès */
+
+/* ===== TOAST ===== */
 .toast {
     position: fixed;
-    bottom: 70px;
-    right: 20px;
+    bottom: 90px;
+    left: 10px;
     background: rgba(255,105,180,0.95);
-    padding: 12px 18px;
-    border-radius: 6px;
-    font-size: 14px;
-    color: #fff;
-    box-shadow: 0 0 12px #ff69b4aa;
+    padding: 10px 15px;
+    border-radius: 5px;
     opacity: 0;
     transition: opacity 0.4s, transform 0.4s;
 }
+
 .toast.show {
     opacity: 1;
     transform: translateY(-10px);
 }
-h2 { color: #ff6fa9; text-align: center; }
-.upgrade { border: 1px solid #444; padding: 10px; margin-bottom: 10px; }
-button { background: #1a1a1a; color: white; border: 1px solid #ff6fa9; padding: 8px 16px; cursor: pointer; }
-button:hover { background: #ff6fa9; color: black; }
-#leaderboard li { font-size: 14px; margin-bottom: 5px; }
-#loginPanel {
-    position: fixed;
-    top:0; left:0; width:100%; height:100%;
-    background: rgba(0,0,0,0.9);
-    display:flex; align-items:center; justify-content:center; flex-direction:column;
-    color:white; font-family:monospace; z-index:100;
-}
-#loginPanel input { margin:6px 0; padding:6px; width:200px; border:1px solid #ff6fa9; background:#1a1a1a; color:white; }
-#loginPanel button { margin-top:10px; }
 </style>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
 </head>
 
 <body>
 
-<!-- Audio -->
 <audio id="music" loop>
-    <source src="audio/Doki Doki Literature Club! OST - Doki Doki Literature Club! (Main Theme).mp3" type="audio/mpeg">
+  <source src="audio/music.mp3" type="audio/mpeg">
 </audio>
 <audio id="clickSound">
-    <source src="audio/computer-mouse-click-351398.mp3" type="audio/mpeg">
+  <source src="audio/click.mp3" type="audio/mpeg">
 </audio>
 
-<!-- Login -->
-<div id="loginPanel">
-    <h2>Literature.exe - Connexion</h2>
-    <input id="loginName" type="text" placeholder="Pseudo">
-    <input id="loginPass" type="password" placeholder="Mot de passe">
-    <button onclick="login()">Connexion / Créer compte</button>
-</div>
+<div id="overlay">
 
-<!-- Overlay principal -->
-<div id="overlay" style="display:none;">
+<!-- CLASSEMENT -->
 <div id="leaderboardPanel">
-    <div id="toggleLeaderboard" onclick="toggleLeaderboard()">≪</div>
     <h2>Classement</h2>
     <ol id="leaderboard"></ol>
 </div>
 
+<!-- CENTRE -->
 <div id="main">
-    <img id="logo"
-         src="https://vignette.wikia.nocookie.net/doki-doki-literature-club/images/c/c9/Logo.png/revision/latest?cb=20171204125056"
-         onclick="clickLiterature()">
+    <img id="logo" src="Logo.png" onclick="clickLiterature()">
     <p style="opacity:0.6;">Clique sur le logo</p>
 </div>
 
+<!-- BOUTIQUE -->
 <div id="shop">
     <h2>Boutique</h2>
-    <div id="shopItems"></div>
+
+    <div class="shopSection">
+        <h3>🛒 Améliorations</h3>
+        <div id="shopItems"></div>
+    </div>
+
+    <div class="shopSection">
+        <h3>🎁 Rewards</h3>
+        <div id="shopRewards"></div>
+    </div>
 </div>
+
 </div>
 
 <div id="statsBar">
     <div id="points">Points : 0</div>
-    <div id="stats">Par clic : 1 | Auto : 0 / sec</div>
+    <div id="score">Score : 0</div>
+    <div id="stats">Par clic : 1 | Auto : 0</div>
 </div>
 
 <div id="toastContainer"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <script>
-// 🔥 Firebase
-firebase.initializeApp({
-  apiKey: "AIzaSyCugkmIHQfG527QDYEmeylRb-8yNBE-Qk0",
-  authDomain: "dokidokilitteratureclub-61b4c.firebaseapp.com",
-  projectId: "dokidokilitteratureclub-61b4c"
-});
+
+/* ===== FIREBASE INIT ===== */
+const firebaseConfig = {
+  apiKey: "TA_CLE",
+  authDomain: "TON_PROJET.firebaseapp.com",
+  projectId: "TON_PROJET",
+  storageBucket: "TON_PROJET.appspot.com",
+  messagingSenderId: "ID",
+  appId: "APPID"
+};
+
+firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// 👤 Joueur
-let playerName, encodedPwd;
-let points=0, perClick=1, passive=0, totalPointsGained=0, purchaseBonus=0;
-let clickTimes=[], musicStarted=false;
+/* ===== ÉTAT JOUEUR ===== */
+let playerName = localStorage.getItem("playerName");
 
-// 🍬 Achievements
+if(!playerName){
+    playerName = prompt("Choisis ton pseudo !");
+    localStorage.setItem("playerName", playerName);
+}
+let points = 0;
+let score = 0;
+let perClick = 1;
+let passive = 0;
+let totalPointsGained = 0;
+let musicStarted = false;
+let clickTimes = [];
+let unlockedAchievements = [];
+
+/* ===== AMÉLIORATIONS ===== */
+const upgrades=[
+  {name:"✒️ Stylo", cost:50, perClick:0.5, passive:0},
+  {name:"📓 Poème", cost:250, perClick:2, passive:0},
+  {name:"🖋️ Stylo plume", cost:1200, perClick:5, passive:0},
+  {name:"📖 Recueil de poèmes", cost:4500, perClick:10, passive:0.5},
+  {name:"📝 Carnet relié", cost:12000, perClick:18, passive:1},
+  {name:"📚 Anthologie", cost:35000, perClick:35, passive:2},
+  {name:"🖥️ Traitement de texte", cost:90000, perClick:70, passive:4},
+  {name:"⌨️ Clavier mécanique", cost:180000, perClick:120, passive:8},
+  {name:"📜 Manuscrit ancien", cost:350000, perClick:200, passive:12},
+  {name:"🏛️ Bibliothèque personnelle", cost:600000, perClick:350, passive:20},
+  {name:"🧠 Inspiration divine", cost:1500000, perClick:550, passive:35},
+  {name:"🌸 Influence de Sayori", cost:3000000, perClick:850, passive:50},
+  {name:"💜 Regard de Yuri", cost:6000000, perClick:1400, passive:80},
+  {name:"🎼 Harmonie de Natsuki", cost:12000000, perClick:2300, passive:150},
+  {name:"📘 Conscience de Monika", cost:25000000, perClick:4000, passive:250},
+  {name:"💾 Script auto-écrit", cost:50000000, perClick:7000, passive:400},
+  {name:"🌌 Réalité altérée", cost:60000000, perClick:9000, passive:600},
+  {name:"🩸 Fichier corrompu", cost:70000000, perClick:13000, passive:800},
+  {name:"🕳️ Brèche du jeu", cost:75000000, perClick:20000, passive:1200},
+  {name:"👁️ Observateur", cost:80000000, perClick:30000, passive:1600},
+  {name:"💿 Codex interdit", cost:85000000, perClick:40000, passive:2000},
+  {name:"🔮 Vision du futur", cost:88000000, perClick:50000, passive:2500},
+  {name:"📦 Coffre scellé", cost:91000000, perClick:60000, passive:3000},
+  {name:"🖤 Fragment de l’ombre", cost:94000000, perClick:70000, passive:3500},
+  {name:"⚡ Éclair de Monika", cost:96000000, perClick:80000, passive:4000},
+  {name:"🌺 Fleur corrompue", cost:97000000, perClick:90000, passive:4500},
+  {name:"💡 Idée divine", cost:98000000, perClick:100000, passive:5000},
+  {name:"🕹️ Simulateur de destin", cost:98500000, perClick:120000, passive:5500},
+  {name:"📌 Point final", cost:99000000, perClick:140000, passive:6000},
+  {name:"🎇 Explosion de mots", cost:99200000, perClick:160000, passive:6500},
+  {name:"💫 Constellation littéraire", cost:99400000, perClick:180000, passive:7000},
+  {name:"📖 Tome ultime", cost:99600000, perClick:200000, passive:7500},
+  {name:"🌟 Inspiration infinie", cost:99800000, perClick:250000, passive:8000},
+  {name:"💻 Script omnipotent", cost:99900000, perClick:300000, passive:9000},
+  {name:"🌌 Univers parallèle", cost:99950000, perClick:400000, passive:10000},
+  {name:"🧬 Manipulation du temps", cost:99970000, perClick:500000, passive:12000},
+  {name:"🕳️ Singularité", cost:99985000, perClick:600000, passive:15000},
+  {name:"👁️ Œil du Créateur", cost:99990000, perClick:700000, passive:20000},
+  {name:"🏆 Maître de la littérature", cost:100000000, perClick:1000000, passive:25000},
+  {name:"🖥️ Serveur instable", cost:120000000, perClick:1000000, passive:25000},
+  {name:"💾 Fichier corrompu", cost:140000000, perClick:1500000, passive:35000},
+  {name:"🖧 Réseau saturé", cost:160000000, perClick:2000000, passive:50000},
+  {name:"📂 Partition endommagée", cost:180000000, perClick:2500000, passive:75000},
+  {name:"🛠️ Script automatique", cost:200000000, perClick:4000000, passive:100000},
+  {name:"💻 Compilation glitchée", cost:230000000, perClick:6000000, passive:125000},
+  {name:"🗄️ Base de données corrompue", cost:260000000, perClick:8000000, passive:150000},
+  {name:"🧩 Module instable", cost:300000000, perClick:10000000, passive:200000},
+  {name:"🖱️ Macro ultra-rapide", cost:340000000, perClick:15000000, passive:300000},
+  {name:"📼 Backup endommagé", cost:380000000, perClick:20000000, passive:350000},
+  {name:"⚙️ Kernel modifié", cost:420000000, perClick:25000000, passive:400000},
+  {name:"📟 Proxy saturé", cost:460000000, perClick:30000000, passive:500000},
+  {name:"🗃️ Serveur maître", cost:500000000, perClick:40000000, passive:600000}
+];
+
+/* ===== REWARDS ===== */
+const rewards = [
+ {id:"YURI", name:"💾 YURI.chr", cost:10000, type:"BLK", amount:1000, purchased:false, code:null}
+];
+
+/* ===== ACHIEVEMENTS ===== */
 const achievements = [
   { id:"first_click", title:"Premiers mots", description:"Gagner 10 points", pointsBonus:0.1, condition:()=>totalPointsGained>=10 },
-  { id:"writer", title:"Écrivain", description:"Gagner 1000 points", pointsBonus:0.5, condition:()=>totalPointsGained>=1000 },
-  { id:"poet", title:"Poète", description:"Acheter un poème", pointsBonus:0.2, condition:()=>purchaseBonus>=0.2 }
+  { id:"writer_1", title:"Jeune Écrivain", description:"Gagner 1000 points", pointsBonus:0.5, condition:()=>totalPointsGained>=1000 },
+  { id:"writer_2", title:"Écrivain ? Cliqueur débutant", description:"Gagner 10000 points", pointsBonus:1.0, condition:()=>totalPointsGained>=10000 },
+  { id:"writer_3", title:"Cliqueur Obstiné", description:"Gagner 50000 points", pointsBonus:5.0, condition:()=>totalPointsGained>=50000 },
+  { id:"writer_4", title:"Cliqueur Fou", description:"Gagner 100000 points", pointsBonus:10.0, condition:()=>totalPointsGained>=100000 },
+  { id:"writer_5", title:"Cliqueur Enragé", description:"Gagner 500000 points", pointsBonus:25.0, condition:()=>totalPointsGained>=500000 },
+  { id:"writer_6", title:"Cliqueur ? Non... Spameur !", description:"Gagner 1000000 points", pointsBonus:50.0, condition:()=>totalPointsGained>=1000000 },
+  { id:"writer_7", title:"Spameur Débutant", description:"Gagner 2000000 points", pointsBonus:100.0, condition:()=>totalPointsGained>=2000000 },
+  { id:"writer_8", title:"Spameur Obstiné", description:"Gagner 5000000 points", pointsBonus:250.0, condition:()=>totalPointsGained>=5000000 },
+  { id:"writer_9", title:"Spameur Déterminé", description:"Gagner 10000000 points", pointsBonus:500.0, condition:()=>totalPointsGained>=10000000 },
+  { id:"writer_10", title:"Spameur Fou", description:"Gagner 15000000 points", pointsBonus:750.0, condition:()=>totalPointsGained>=15000000 },
+  { id:"writer_11", title:"Spameur Enragé", description:"Gagner 30000000 points", pointsBonus:1500.0, condition:()=>totalPointsGained>=30000000 },
+  { id:"writer_12", title:"Spameur ? Non... P̴̗̙̳̬͌͛̈́̈́͜͜ļ̷͍̝̝̮̦̗͌͌a̶̡̭̍̊̉̀̈́͜y̸͖̦̤͖̞̥̩̘̲͝e̸̻͍̜̩̼͉̠̖̐r̸̢̠̘͙̲̰̪̟̈́́͛͗̈́̿̎̆̓̋̚", description:"Gagner 50000000 points", pointsBonus:2500.0, condition:()=>totalPointsGained>=50000000 },
+  { id:"poet", title:"Poète", description:"Acheter un poème", pointsBonus:0.2 }
 ];
-let unlockedAchievements=[];
 
-// 🔄 Login
-function login(){
-    const name=document.getElementById("loginName").value.trim();
-    const pass=document.getElementById("loginPass").value;
-    if(!name||!pass){ alert("Remplir les deux champs"); return; }
-    playerName=name;
-    encodedPwd=btoa(pass); // simple hash
-    localStorage.setItem("ddlc_name",playerName);
-    localStorage.setItem("ddlc_password",encodedPwd);
-    document.getElementById("loginPanel").style.display="none";
-    document.getElementById("overlay").style.display="flex";
-    initPlayer();
+function savePlayer() {
+  db.collection("players").doc(playerName).set({
+    playerName,
+    score,
+    points,
+    perClick,
+    passive,
+    rewards,
+    unlockedAchievements,
+    totalPointsGained,
+    lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
 }
+db.collection("players")
+.orderBy("score","desc")
+.limit(10)
+.onSnapshot(snapshot => {
 
-// 🔄 Charger / créer compte
-function initPlayer(){
-    db.collection("players").doc(playerName).get().then(doc=>{
-        if(doc.exists && doc.data().password===encodedPwd){
-            const data=doc.data();
-            points=data.points;
-            perClick=data.perClick;
-            passive=data.passive;
-            totalPointsGained=data.totalPointsGained||points;
-            purchaseBonus=data.purchaseBonus||0;
-            unlockedAchievements=data.unlockedAchievements||[];
-            updateUI();
-        }else{ savePlayerData(); }
-        renderShop(); loadLeaderboard(); updateUI();
-    }).catch(()=>{ // fallback local
-        const backup=JSON.parse(localStorage.getItem("ddlc_backup"));
-        if(backup){ points=backup.points; perClick=backup.perClick; passive=backup.passive; totalPointsGained=backup.totalPointsGained||points; purchaseBonus=backup.purchaseBonus||0; unlockedAchievements=backup.unlockedAchievements||[]; updateUI(); }
-        renderShop(); loadLeaderboard();
+    const leaderboard = document.getElementById("leaderboard");
+    leaderboard.innerHTML = "";
+
+    snapshot.forEach(doc=>{
+        const p = doc.data();
+
+        const li = document.createElement("li");
+        li.innerText = `${p.playerName} — ${Math.floor(p.score)}`;
+
+        leaderboard.appendChild(li);
     });
-}
 
-// UI
-function updateUI(){
-    document.getElementById("points").innerText="Points : "+Math.floor(points);
-    document.getElementById("stats").innerText=`Par clic : ${perClick} | Auto : ${passive} / sec`;
-    const statsBar=document.getElementById("statsBar");
-    statsBar.style.width=Math.min(300, 180+Math.floor(document.getElementById("points").innerText.length*6))+"px";
-}
+});
 
-// Anti auto-clic + bounce + son + musique
+setInterval(()=>{
+
+    points += passive;
+
+    if(passive > 0){
+        totalPointsGained += passive;
+
+        if(totalPointsGained % 100 === 0){
+            score++;
+        }
+
+        updateUI();
+        savePlayer();
+    }
+
+},1000);
+
+
+/* ===== CLICK ===== */
 function clickLiterature(){
-    const logo=document.getElementById("logo");
-    const clickSound=document.getElementById("clickSound");
-    const music=document.getElementById("music");
+    const logo = document.getElementById("logo");
+    const sound = document.getElementById("clickSound");
+    const music = document.getElementById("music");
 
-    logo.classList.remove("bounce"); void logo.offsetWidth; logo.classList.add("bounce");
-    clickSound.currentTime=0; clickSound.play();
-    if(!musicStarted){ music.volume=0.5; music.play(); musicStarted=true; }
+    logo.classList.remove("bounce");
+    void logo.offsetWidth;
+    logo.classList.add("bounce");
 
-    const now=Date.now();
-    clickTimes.push(now);
-    clickTimes=clickTimes.filter(t=>now-t<1000);
+    sound.currentTime = 0;
+    sound.play();
 
-    let gain=perClick;
-    if(clickTimes.length>12) gain*=0.2;
-    if(clickTimes.length>20) gain=0;
+    if(!musicStarted){
+        music.volume = 0.4;
+        music.play();
+        musicStarted = true;
+    }
 
-    points+=gain;
-    totalPointsGained+=gain;
+    points += perClick;
+    totalPointsGained += perClick;
+
+    if(totalPointsGained % 100 === 0){
+        score++;
+    }
+
     updateUI();
     checkAchievements();
+    saveGame();
+    savePlayer();
 }
 
-// Boutique
-const upgrades=[
-  { name:"✒️ Stylo", cost:50, perClick:1, passive:0, bonus:0.1 },
-  { name:"📓 Poème", cost:250, perClick:5, passive:0, bonus:0.2 },
-  { name:"💾 Fichier .chr", cost:500, perClick:0, passive:2, bonus:0.5 }
-];
+/* ===== SHOP ===== */
 function renderShop(){
-    const shop=document.getElementById("shopItems");
-    shop.innerHTML="";
+    const shopItems = document.getElementById("shopItems");
+    shopItems.innerHTML = "";
+
     upgrades.forEach(up=>{
         const div=document.createElement("div");
         div.className="upgrade";
         div.innerHTML=`
-            <strong>${up.name}</strong><br>
-            +${up.perClick} clic<br>
-            +${up.passive} sec<br>
-            Coût : ${up.cost}<br><br>
-            <button onclick='buyUpgrade(${JSON.stringify(up)})'>Acheter</button>
-        `;
-        shop.appendChild(div);
+        <strong>${up.name}</strong><br>
+        +${up.perClick} clic | +${up.passive}/sec<br>
+        Coût : ${up.cost}<br>
+        <button onclick='buyUpgrade(${JSON.stringify(up)})'>Acheter</button>`;
+        shopItems.appendChild(div);
+    });
+
+    const shopRewards=document.getElementById("shopRewards");
+    shopRewards.innerHTML="";
+    rewards.forEach(r=>{
+        const div=document.createElement("div");
+        div.className="upgrade";
+        div.innerHTML=`
+        <strong>${r.name}</strong><br>
+        ${r.purchased ? "Code :<br><small>"+r.code+"</small>" : "Coût : "+r.cost}
+        <button ${r.purchased?"disabled":""} onclick='buyReward("${r.id}")'>
+        ${r.purchased?"Débloqué":"Acheter"}
+        </button>`;
+        shopRewards.appendChild(div);
     });
 }
+
+/* ===== BUY ===== */
 function buyUpgrade(up){
-    if(points>=up.cost){
-        points-=up.cost;
-        perClick+=up.perClick;
-        passive+=up.passive;
-        purchaseBonus+=up.bonus;
-        animateUpgrade(up);
-        updateUI();
-        savePlayerData();
-        checkAchievements();
-    }
-}
-function animateUpgrade(up){
-    alert(`✨ Vous avez acheté ${up.name} !`); // simple pour l'instant, plus tard animation visuelle
+    if(points < up.cost) return;
+    points -= up.cost;
+    perClick += up.perClick;
+    passive += up.passive;
+    score += Math.floor(up.cost / 1000);
+    toast("Amélioration achetée");
+    updateUI();
+    saveGame();
+    savePlayer();
 }
 
-// Passif
-setInterval(()=>{ points+=passive; totalPointsGained+=passive; if(passive>0) updateUI(); checkAchievements(); },1000);
-
-// Sauvegarde
-function savePlayerData(){
-    db.collection("players").doc(playerName).set({
-        password:encodedPwd, points:Math.floor(points), perClick, passive,
-        totalPointsGained, purchaseBonus, unlockedAchievements
-    });
-    localStorage.setItem("ddlc_backup", JSON.stringify({points, perClick, passive, totalPointsGained, purchaseBonus, unlockedAchievements}));
+function buyReward(id){
+    const r=rewards.find(x=>x.id===id);
+    if(points<r.cost||r.purchased)return;
+    points-=r.cost;
+    r.purchased=true;
+    r.code = CryptoJS.AES.encrypt(
+      `DDLC|${r.id}|PLAYER=${playerName}|TYPE=${r.type}|AMOUNT=${r.amount}`,
+      "SECRET_KEY"
+    ).toString();
+    score+=10;
+    toast("Reward débloquée !");
+    renderShop();
+    saveGame();
+    savePlayer();
 }
 
-// Achievements
-function showToast(title,msg){ 
-    const toast=document.createElement("div");
-    toast.className="toast";
-    toast.innerHTML=`<strong>${title}</strong><br>${msg}`;
-    document.body.appendChild(toast);
-    setTimeout(()=>{ toast.classList.add("show"); },10);
-    setTimeout(()=>{ toast.classList.remove("show"); setTimeout(()=>toast.remove(),400); },4000);
-}
+/* ===== ACHIEVEMENTS ===== */
 function checkAchievements(){
     achievements.forEach(a=>{
-        if(a.condition() && !unlockedAchievements.includes(a.id)){
+        if(!unlockedAchievements.includes(a.id) && a.condition()){
             unlockedAchievements.push(a.id);
-            points+=a.pointsBonus; // donne points classement
-            showToast(a.title,a.description);
-            savePlayerData();
+            score += a.pointsBonus;
+            toast("🏆 "+a.title);
+            savePlayer();
         }
     });
 }
 
-// Score
-function getScore(){ return totalPointsGained/1000+purchaseBonus; }
-
-// Classement
-function loadLeaderboard(){
-    db.collection("players").orderBy("points","desc").limit(15).onSnapshot(snapshot=>{
-        const list=document.getElementById("leaderboard");
-        list.innerHTML="";
-        snapshot.forEach(doc=>{
-            const data=doc.data();
-            const score=(data.totalPointsGained/1000)+(data.purchaseBonus||0);
-            list.innerHTML+=`<li>${doc.id} — ${score.toFixed(2)}</li>`;
-        });
-    });
+/* ===== UI ===== */
+function updateUI(){
+    document.getElementById("points").innerText="Points : "+Math.floor(points);
+    document.getElementById("score").innerText="Score : "+score;
+    document.getElementById("stats").innerText=`Par clic : ${perClick} | Auto : ${passive}`;
 }
 
-// Toggle leaderboard
-function toggleLeaderboard(){ document.getElementById("leaderboardPanel").classList.toggle("hidden"); }
+/* ===== TOAST ===== */
+function toast(msg){
+    const t=document.createElement("div");
+    t.className="toast";
+    t.innerText=msg;
+    document.body.appendChild(t);
+    setTimeout(()=>t.classList.add("show"),50);
+    setTimeout(()=>t.remove(),3000);
+}
 
-window.addEventListener("beforeunload", savePlayerData);
+/* ===== SAVE ===== */
+function saveGame(){
+    localStorage.setItem("ddlc_save", JSON.stringify({
+        points, score, perClick, passive, totalPointsGained, rewards
+    }));
+}
+
+function loadGame(){
+    const s=JSON.parse(localStorage.getItem("ddlc_save"));
+    if(!s)return;
+    Object.assign(window,s);
+}
+
+/* INIT */
+async function initPlayer(){
+
+    const doc = await db.collection("players").doc(playerName).get();
+
+    if(doc.exists){
+        const d = doc.data();
+
+        points = d.points || 0;
+        score = d.score || 0;
+        perClick = d.perClick || 1;
+        passive = d.passive || 0;
+        rewards = d.rewards || [];
+        unlockedAchievements = d.unlockedAchievements || [];
+        totalPointsGained = d.totalPointsGained || 0;
+    }
+
+    renderShop();
+    updateUI();
+}
+
+initPlayer();
+
 </script>
 
 </body>
