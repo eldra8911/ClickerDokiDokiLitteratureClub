@@ -342,12 +342,17 @@ playBtn.addEventListener("click", login);
 
 /* ================= CLICK ================= */
 const logo = document.getElementById("logo");
-let lastClickTime = 0; // <-- ajoute ça en haut, à côté de tes autres variables
+
+let clickTimes = []; // stocke les timestamps des clics
 
 window.clickLiterature = function() {
     const now = Date.now();
-    if (now - lastClickTime < 50) return; // bloque les clics trop rapides
-    lastClickTime = now;
+
+    // on garde seulement les clics de la dernière seconde
+    clickTimes = clickTimes.filter(t => now - t < 1000);
+
+    if (clickTimes.length >= 5) return; // max 5 clics/seconde
+    clickTimes.push(now);
 
     logo.classList.remove("bounce");
     void logo.offsetWidth;
@@ -371,6 +376,7 @@ window.clickLiterature = function() {
     saveCloud();
     checkAchievements();
 }
+
 
 /* ================= SHOP ================= */
 function renderShop() {
@@ -498,4 +504,5 @@ function toast(msg) {
 </script>
 </body>
 </html>
+
 
