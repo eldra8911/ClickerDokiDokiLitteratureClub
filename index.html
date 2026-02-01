@@ -169,21 +169,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* ================= LIVE PLAYERS ================= */
-import { onSnapshot, collection } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-
-onSnapshot(collection(db, "players"), (snapshot) => {
-  snapshot.docChanges().forEach((change) => {
-    if(change.type === "added" || change.type === "modified") {
-      const data = change.doc.data();
-      console.log("Joueur:", change.doc.id, data);
-
-      // exemple : mettre à jour ton UI avec leurs rewards et points
-      // tu peux créer une div #allPlayers et remplir avec data.points, data.achievements, data.rewards
-    }
-  });
-});
-
 function login(){
     const u = usernameInput.value.trim();
     const p = passwordInput.value.trim();
@@ -549,3 +534,4 @@ function toast(msg) {
 </script>
 </body>
 </html>
+
