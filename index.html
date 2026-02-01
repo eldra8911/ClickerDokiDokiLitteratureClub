@@ -364,36 +364,40 @@ const upgrades=[
 
 /* ================= LOGIN ================= */
 
+const usernameInput = document.getElementById("username");
+const passwordInput = document.getElementById("password");
+const loginScreen = document.getElementById("loginScreen");
+
 window.login = function() {
-    const u = username.value;
-    const p = password.value;
+    const u = usernameInput.value.trim();
+    const p = passwordInput.value.trim();
     if(!u || !p) return alert("Pseudo + mot de passe");
 
     player = u;
     saveKey = "ddlc_" + CryptoJS.SHA256(u+p).toString();
 
     loadGame();
+
     loginScreen.style.display = "none";
 
-    /* Déblocage audio */
-    clickSound.play().then(() => { clickSound.pause(); clickSound.currentTime = 0; });
+    // Déblocage audio
+    clickSound.play().then(()=>{ clickSound.pause(); clickSound.currentTime=0; });
     music.volume = 0.3;
-    music.play().then(() => { music.pause(); music.currentTime = 0; });
+    music.play().then(()=>{ music.pause(); music.currentTime=0; });
 
     renderShop();
-    updateUI();
     renderRewards();
     renderAchievements();
+    updateUI();
     checkAchievements();
 }
 
-
 /* ================= CLICK ================= */
 
+const logo = document.getElementById("logo");
 window.clickLiterature = function() {
-    const logo = document.getElementById("logo");
     logo.classList.remove("bounce");
-    void logo.offsetWidth;
+    void logo.offsetWidth; // restart animation
     logo.classList.add("bounce");
 
     clickSound.pause();
@@ -414,8 +418,7 @@ window.clickLiterature = function() {
     saveCloud();
     checkAchievements();
 }
-
-
+  
 /* ================= SHOP ================= */
 
 function renderShop() {
@@ -549,4 +552,3 @@ function toast(msg) {
 </script>
 </body>
 </html>
-
