@@ -11,42 +11,34 @@ height:100%;
 overflow:hidden;
 font-family:monospace;
 color:white;
+background:black;
 }
 
 body{
 background:url("Club.png") center / cover no-repeat fixed;
 }
 
-#overlay{
-display:flex;
-height:100vh;
-}
-
-/* LOGIN */
 #loginScreen{
-position:absolute;
-width:100%;
-height:100%;
+position:fixed;
+inset:0;
 background:black;
 display:flex;
+flex-direction:column;
 justify-content:center;
 align-items:center;
-flex-direction:column;
 z-index:999;
 }
 
-input{
+input,button{
 padding:10px;
 margin:5px;
-border:none;
-outline:none;
+font-family:monospace;
 }
 
 button{
 background:black;
 color:white;
 border:1px solid #ff6fa9;
-padding:8px;
 cursor:pointer;
 }
 
@@ -55,7 +47,11 @@ background:#ff6fa9;
 color:black;
 }
 
-/* CENTRE */
+#overlay{
+display:flex;
+height:100vh;
+}
+
 #main{
 flex:1;
 display:flex;
@@ -65,12 +61,12 @@ align-items:center;
 }
 
 #logo{
-width:360px;
+width:340px;
 cursor:pointer;
 }
 
 .bounce{
-animation:bounce .2s;
+animation:bounce .15s;
 }
 
 @keyframes bounce{
@@ -79,58 +75,45 @@ animation:bounce .2s;
 100%{transform:scale(1)}
 }
 
-/* SHOP */
 #shop{
-width:320px;
+width:300px;
 background:rgba(0,0,0,.9);
 padding:10px;
-display:flex;
-flex-direction:column;
-}
-
-.shopSection{
-flex:1;
 overflow-y:auto;
 }
 
 .upgrade{
 border:1px solid #444;
-padding:10px;
-margin-bottom:10px;
+padding:8px;
+margin-bottom:8px;
 }
 
-/* STATS */
 #statsBar{
 position:fixed;
 bottom:10px;
 left:10px;
-background:rgba(0,0,0,.85);
+background:rgba(0,0,0,.8);
 border:1px solid #ff6fa9;
 padding:10px;
 }
 
-/* TOAST */
 .toast{
 position:fixed;
-bottom:90px;
+bottom:80px;
 left:10px;
-background:rgba(255,105,180,.95);
-padding:10px;
-border-radius:5px;
+background:#ff6fa9;
+color:black;
+padding:8px;
 opacity:0;
-transition:.4s;
+transition:.3s;
 }
 
-.toast.show{
-opacity:1;
-transform:translateY(-10px);
-}
+.toast.show{opacity:1}
 </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
 <div id="loginScreen">
 <h2>Literature.exe</h2>
 <input id="username" placeholder="Pseudo">
@@ -138,13 +121,8 @@ transform:translateY(-10px);
 <button onclick="login()">Jouer</button>
 </div>
 
-<audio id="music" loop>
-<source src="audio/Doki Doki Literature Club! OST - Doki Doki Literature Club! (Thème principal).mp3">
-</audio>
-
-<audio id="clickSound">
-<source src="audio/ordinateur-souris-click-351398.mp3">
-</audio>
+<audio id="music" loop src="audio/music.mp3"></audio>
+<audio id="clickSound" src="audio/click.mp3"></audio>
 
 <div id="overlay">
 
@@ -154,21 +132,15 @@ transform:translateY(-10px);
 </div>
 
 <div id="shop">
-<h2>Boutique</h2>
-
-<div class="shopSection">
-<h3>🛒 Améliorations</h3>
+<h3>Boutique</h3>
 <div id="shopItems"></div>
-</div>
-
-<div class="shopSection">
 <h3>🎁 Rewards</h3>
-<div id="shopRewards"></div>
+<div id="rewardItems"></div>
+
+<h3>🏆 Achievements</h3>
+<div id="achievementItems"></div>
 </div>
 
-<button onclick="exportAllSaves()">📁 Exporter toutes les saves</button>
-
-</div>
 </div>
 
 <div id="statsBar">
@@ -181,37 +153,126 @@ transform:translateY(-10px);
 
 <script type="module">
 
-  // Import des modules Firebase
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import { getFirestore, doc, setDoc, getDoc, getDocs, collection, orderBy, query } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+const shopItems = document.getElementById("shopItems");
+const rewardItems = document.getElementById("rewardItems");
+const achievementItems = document.getElementById("achievementItems");
+const stats = document.getElementById("stats");
 
-  const firebaseConfig = {
-    apiKey: "TON_API_KEY",
-    authDomain: "TON_PROJECT.firebaseapp.com",
-    projectId: "TON_PROJECT_ID",
-    storageBucket: "TON_PROJECT.appspot.com",
-    messagingSenderId: "TON_SENDER_ID",
-    appId: "TON_APP_ID"
-  };
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getFirestore, doc, setDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+/* 🔥 CONFIG FIREBASE */
+const firebaseConfig = {
+apiKey: "TA_API_KEY",
+authDomain: "TON_PROJET.firebaseapp.com",
+projectId: "TON_PROJET_ID",
+};
 
-  window.db = db; // Pour pouvoir l’utiliser ailleurs
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-/* ================= PLAYER ================= */
-
-let totalClicks = 0;
+/* ================= DATA ================= */
 
 let player="";
 let saveKey="";
-
 let points=0;
-let score=0;
 let perClick=1;
 let passive=0;
-let totalPointsGained=0;
+let totalPoints=0;
+let totalClicks=0;
 let musicStarted=false;
+
+let achievements = [
+  { id:"writer_1", name:"Jeune Écrivain", description:"Gagner 1 000 points", goal:1000, type:"points", pointsBonus:0.5, unlocked:false },
+  { id:"writer_2", name:"Écrivain ? Cliqueur débutant", description:"Gagner 10 000 points", goal:10000, type:"points", pointsBonus:1.0, unlocked:false },
+  { id:"writer_3", name:"Cliqueur Obstiné", description:"Gagner 50 000 points", goal:50000, type:"points", pointsBonus:5.0, unlocked:false },
+  { id:"writer_4", name:"Cliqueur Fou", description:"Gagner 100 000 points", goal:100000, type:"points", pointsBonus:10.0, unlocked:false },
+  { id:"writer_5", name:"Cliqueur Enragé", description:"Gagner 500 000 points", goal:500000, type:"points", pointsBonus:25.0, unlocked:false },
+  { id:"writer_6", name:"Cliqueur ? Non... Spameur !", description:"Gagner 1 000 000 points", goal:1000000, type:"points", pointsBonus:50.0, unlocked:false },
+  { id:"writer_7", name:"Spameur Débutant", description:"Gagner 2 000 000 points", goal:2000000, type:"points", pointsBonus:100.0, unlocked:false },
+  { id:"writer_8", name:"Spameur Obstiné", description:"Gagner 5 000 000 points", goal:5000000, type:"points", pointsBonus:250.0, unlocked:false },
+  { id:"writer_9", name:"Spameur Déterminé", description:"Gagner 10 000 000 points", goal:10000000, type:"points", pointsBonus:500.0, unlocked:false },
+  { id:"writer_10", name:"Spameur Fou", description:"Gagner 15 000 000 points", goal:15000000, type:"points", pointsBonus:750.0, unlocked:false },
+  { id:"writer_11", name:"Spameur Enragé", description:"Gagner 30 000 000 points", goal:30000000, type:"points", pointsBonus:1500.0, unlocked:false },
+  { id:"writer_12", name:"Spameur ? Non... P̴l̷a̶y̸e̸r̸", description:"Gagner 50 000 000 points", goal:50000000, type:"points", pointsBonus:2500.0, unlocked:false }
+];
+
+let rewards = [
+  { id:"YURI", name:"💾 YURI.chr", cost:5000, purchased:false, code:null },
+  { id:"SAYORI", name:"🎀 SAYORI.chr", cost:15000, purchased:false, code:null }
+];
+
+function checkAchievements(){
+  achievements.forEach(a=>{
+    if(a.unlocked) return;
+
+    if(a.type === "points" && totalPoints >= a.goal){
+      unlockAchievement(a);
+    }
+  });
+
+  renderAchievements();
+}
+
+function unlockAchievement(a){
+  a.unlocked = true;
+
+  // BONUS → on boost le clic (propre et visible)
+  perClick += a.pointsBonus;
+
+  toast("🏆 Achievement débloqué : " + a.name);
+
+  saveGame();
+  saveCloud();
+}
+function renderAchievements(){
+  achievementItems.innerHTML="";
+
+  achievements.forEach(a=>{
+    const d=document.createElement("div");
+    d.className="upgrade";
+    d.innerHTML=`
+      <b>${a.name}</b><br>
+      <small>${a.description}</small><br>
+      ${a.unlocked ? "✅ Débloqué" : "🔒 Verrouillé"}
+    `;
+    achievementItems.appendChild(d);
+  });
+}
+
+function renderRewards(){
+  rewardItems.innerHTML="";
+  rewards.forEach((r,i)=>{
+    const d=document.createElement("div");
+    d.className="upgrade";
+    d.innerHTML=`
+      <b>${r.name}</b><br>
+      ${r.purchased ? "<small>Code généré</small>" : "Coût : "+r.cost}<br>
+      <button ${r.purchased?"disabled":""} onclick="buyReward(${i})">
+        ${r.purchased?"Débloqué":"Acheter"}
+      </button>
+    `;
+    rewardItems.appendChild(d);
+  });
+}
+window.buyReward = function(i){
+  const r = rewards[i];
+  if(points < r.cost || r.purchased) return;
+
+  points -= r.cost;
+  r.purchased = true;
+
+  r.code = CryptoJS.AES.encrypt(
+    `DDLC|${r.id}|PLAYER=${player}|TIME=${Date.now()}`,
+    "SECRET_EVENT_KEY"
+  ).toString();
+
+  toast("🎁 Reward débloquée !");
+  renderRewards();
+  saveGame();
+  saveCloud();
+};
+
 
 /* ================= UPGRADES ================= */
 
@@ -270,373 +331,161 @@ const upgrades=[
   {name:"🗃️ Serveur maître", cost:500000000, perClick:40000000, passive:600000}
 ];
 
-
-/* ================= REWARDS ================= */
-
-let rewards=[
-{id:"YURI",name:"💾 YURI.chr",cost:10000,type:"BLK",amount:1000,purchased:false,code:null}
-];
-
-/* ================= ACHIEVEMENTS ================= */
-
-let purchasePoemCount = 0;
-let achievements = [
-
-/* POINTS GAGNÉS */
-
-{ id:"first_click", 
-  name:"Premiers mots", 
-  description:"Gagner 10 points", 
-  goal:10, 
-  type:"points",
-  pointsBonus:0.1,
-  unlocked:false
-},
-
-{ id:"writer_1", name:"Jeune Écrivain", description:"Gagner 1 000 points", goal:1000, type:"points", pointsBonus:0.5, unlocked:false },
-{ id:"writer_2", name:"Écrivain ? Cliqueur débutant", description:"Gagner 10 000 points", goal:10000, type:"points", pointsBonus:1.0, unlocked:false },
-{ id:"writer_3", name:"Cliqueur Obstiné", description:"Gagner 50 000 points", goal:50000, type:"points", pointsBonus:5.0, unlocked:false },
-{ id:"writer_4", name:"Cliqueur Fou", description:"Gagner 100 000 points", goal:100000, type:"points", pointsBonus:10.0, unlocked:false },
-{ id:"writer_5", name:"Cliqueur Enragé", description:"Gagner 500 000 points", goal:500000, type:"points", pointsBonus:25.0, unlocked:false },
-{ id:"writer_6", name:"Cliqueur ? Non... Spameur !", description:"Gagner 1 000 000 points", goal:1000000, type:"points", pointsBonus:50.0, unlocked:false },
-{ id:"writer_7", name:"Spameur Débutant", description:"Gagner 2 000 000 points", goal:2000000, type:"points", pointsBonus:100.0, unlocked:false },
-{ id:"writer_8", name:"Spameur Obstiné", description:"Gagner 5 000 000 points", goal:5000000, type:"points", pointsBonus:250.0, unlocked:false },
-{ id:"writer_9", name:"Spameur Déterminé", description:"Gagner 10 000 000 points", goal:10000000, type:"points", pointsBonus:500.0, unlocked:false },
-{ id:"writer_10", name:"Spameur Fou", description:"Gagner 15 000 000 points", goal:15000000, type:"points", pointsBonus:750.0, unlocked:false },
-{ id:"writer_11", name:"Spameur Enragé", description:"Gagner 30 000 000 points", goal:30000000, type:"points", pointsBonus:1500.0, unlocked:false },
-{ id:"writer_12", name:"Spameur ? Non... P̴l̷a̶y̸e̸r̸", description:"Gagner 50 000 000 points", goal:50000000, type:"points", pointsBonus:2500.0, unlocked:false },
-
-/* ACHAT */
-
-{ id:"poet", 
-  name:"Poète", 
-  description:"Acheter un poème", 
-  goal:1,
-  type:"purchase_poem",
-  pointsBonus:0.2,
-  unlocked:false
-}
-
-];
-
-
-function checkAchievements(){
-
-achievements.forEach(a=>{
-
-if(a.unlocked) return;
-
-switch(a.type){
-
-case "points":
-if(totalPointsGained >= a.goal){
-unlockAchievement(a);
-}
-break;
-
-case "clicks":
-if(totalClicks >= a.goal){
-unlockAchievement(a);
-}
-break;
-
-case "purchase_poem":
-if(purchasePoemCount >= a.goal){
-unlockAchievement(a);
-}
-break;
-
-}
-
-});
-
-}
-
-
-function unlockAchievement(a){
-
-a.unlocked = true;
-
-/* BONUS SCORE */
-score += a.pointsBonus;
-
-toast("🏆 Achievement débloqué : " + a.name);
-
-saveGame();
-}
-
-
-
 /* ================= LOGIN ================= */
 
-function login(){
+window.login = function(){
 
-const u=document.getElementById("username").value;
-const p=document.getElementById("password").value;
-
-if(!u||!p)return alert("Entre un pseudo et un mot de passe");
+const u=username.value;
+const p=password.value;
+if(!u||!p) return alert("Pseudo + mot de passe");
 
 player=u;
 saveKey="ddlc_"+CryptoJS.SHA256(u+p).toString();
 
 loadGame();
 
-document.getElementById("loginScreen").style.display="none";
+loginScreen.style.display="none";
 
-const sound = document.getElementById("clickSound");
-const music = document.getElementById("music");
-
-// déblocage audio navigateur
-sound.play().then(() => {
-  sound.pause();
-  sound.currentTime = 0;
-}).catch(()=>{});
-
-music.volume = 0.4;
-music.play().then(() => {
-  music.pause();
-  music.currentTime = 0;
-}).catch(()=>{});
+/* Déblocage audio */
+clickSound.play().then(()=>{clickSound.pause();clickSound.currentTime=0});
+music.volume=0.3;
+music.play().then(()=>{music.pause();music.currentTime=0});
 
 renderShop();
 updateUI();
-}
-
-window.login = login;
-
-/* ================= SAVE ================= */
-
-function saveGame(){
-
-const data={
-points,
-score,
-perClick,
-passive,
-totalPointsGained,
-totalClicks,
-rewards,
-achievements,
-purchasePoemCount
-};
-
-localStorage.setItem(saveKey,JSON.stringify(data));
-}
-
-/* ================= LOAD ================= */
-
-function loadGame(){
-
-const save=localStorage.getItem(saveKey);
-
-if(!save)return;
-
-const d=JSON.parse(save);
-
-points=d.points||0;
-score=d.score||0;
-perClick=d.perClick||1;
-passive=d.passive||0;
-totalPointsGained=d.totalPointsGained||0;
-rewards=d.rewards||rewards;
-totalClicks=d.totalClicks||0;
-achievements=d.achievements||achievements;
-purchasePoemCount = d.purchasePoemCount || 0;
-
-}
-
-/* ================= EXPORT ================= */
-
-function exportAllSaves(){
-
-let all={};
-
-for(let i=0;i<localStorage.length;i++){
-
-const k=localStorage.key(i);
-
-if(k.startsWith("ddlc_")){
-all[k]=JSON.parse(localStorage.getItem(k));
-}
-
-}
-
-const blob=new Blob([JSON.stringify(all,null,2)],{type:"application/json"});
-const a=document.createElement("a");
-
-a.href=URL.createObjectURL(blob);
-a.download="players_saves.json";
-a.click();
+renderRewards();
+renderAchievements();
+checkAchievements();
 }
 
 /* ================= CLICK ================= */
 
-function clickLiterature(){
+window.clickLiterature = function(){
 
-const sound=document.getElementById("clickSound");
-const music=document.getElementById("music");
+const logo=document.getElementById("logo");
+logo.classList.remove("bounce");
+void logo.offsetWidth;
+logo.classList.add("bounce");
 
-sound.currentTime = 0;
-sound.play().catch(e => {
-  console.warn("Son bloqué par le navigateur", e);
-});
-;
+clickSound.pause();
+clickSound.currentTime=0;
+clickSound.play().catch(()=>{});
 
 if(!musicStarted){
-music.volume=.4;
 music.play();
 musicStarted=true;
 }
 
-totalClicks++; // ⭐ IMPORTANT
-
 points+=perClick;
-totalPointsGained+=perClick;
+totalPoints+=perClick;
+totalClicks++;
 
-if(totalPointsGained>=100){
-score++;
-score = Math.floor(totalPointsGained / 100);
-}
-
-checkAchievements();
 updateUI();
 saveGame();
+saveCloud();
+checkAchievements();
 }
-
 
 /* ================= SHOP ================= */
 
 function renderShop(){
-
-const shop=document.getElementById("shopItems");
-shop.innerHTML="";
-
-upgrades.forEach((up,i)=>{
-
-const div=document.createElement("div");
-div.className="upgrade";
-
-div.innerHTML=`
-<strong>${up.name}</strong><br>
-+${up.perClick} clic | +${up.passive}/sec<br>
-Coût : ${up.cost}<br>
-<button onclick="buyUpgrade(${i})">Acheter</button>
-`;
-
-shop.appendChild(div);
+shopItems.innerHTML="";
+upgrades.forEach((u,i)=>{
+const d=document.createElement("div");
+d.className="upgrade";
+d.innerHTML=`
+<b>${u.name}</b><br>
++${u.perClick}/clic | +${u.passive}/sec<br>
+Coût : ${u.cost}<br>
+<button onclick="buy(${i})">Acheter</button>`;
+shopItems.appendChild(d);
 });
-
-const rdiv=document.getElementById("shopRewards");
-rdiv.innerHTML="";
-
-rewards.forEach((r,i)=>{
-
-const div=document.createElement("div");
-div.className="upgrade";
-
-div.innerHTML=`
-<strong>${r.name}</strong><br>
-${r.purchased?`Code:<br><small>${r.code}</small>`:`Coût : ${r.cost}`}
-<button ${r.purchased?"disabled":""} onclick="buyReward(${i})">
-${r.purchased?"Débloqué":"Acheter"}
-</button>
-`;
-
-rdiv.appendChild(div);
-});
-
 }
 
-/* ================= BUY ================= */
-
-function buyUpgrade(i){
-
-const up=upgrades[i];
-
-if(points<up.cost)return;
-
-    if(up.name.includes("Poème")){
-    purchasePoemCount++;
-    }
-
-points-=up.cost;
-perClick+=up.perClick;
-passive+=up.passive;
-score+=Math.floor(up.cost/1000);
-
+window.buy=function(i){
+const u=upgrades[i];
+if(points<u.cost) return;
+points-=u.cost;
+perClick+=u.perClick;
+passive+=u.passive;
 toast("Amélioration achetée");
-
-checkAchievements();
 updateUI();
 saveGame();
-}
-
-function buyReward(i){
-
-const r=rewards[i];
-
-if(points<r.cost||r.purchased)return;
-
-points-=r.cost;
-r.purchased=true;
-
-r.code=CryptoJS.AES.encrypt(
-`DDLC|${r.id}|PLAYER=${player}|TYPE=${r.type}|AMOUNT=${r.amount}`,
-"oOP57oD8z7uw-Y8aiGC-7l7RCuebt-n9JquIHbxovUk="
-).toString();
-
-toast("Reward débloquée !");
-renderShop();
-saveGame();
+saveCloud();
 }
 
 /* ================= PASSIVE ================= */
 
 setInterval(()=>{
+  if(passive>0){
+    points+=passive;
+    totalPoints+=passive;
+    updateUI();
+    saveGame();
+    saveCloud();
+    checkAchievements(); // 🔥 IMPORTANT
+  }
+},1000);
 
-if(passive>0){
-points+=passive;
-checkAchievements();
-updateUI();
-saveGame();
+/* ================= SAVE ================= */
+
+function saveGame(){
+  localStorage.setItem(saveKey, JSON.stringify({
+    points, perClick, passive, totalPoints, totalClicks,
+    achievements, rewards
+  }));
 }
 
-},1000);
+function loadGame(){
+const s=localStorage.getItem(saveKey);
+if(!s) return;
+const d=JSON.parse(s);
+points=d.points||0;
+perClick=d.perClick||1;
+passive=d.passive||0;
+totalPoints=d.totalPoints||0;
+totalClicks=d.totalClicks||0;
+achievements = d.achievements || achievements;
+rewards = d.rewards || rewards;
+}
+
+/* ================= FIREBASE ================= */
+
+async function saveCloud(){
+await setDoc(doc(db,"players",player),{
+  points,
+  score:Math.floor(totalPoints/100),
+  totalClicks,
+  perClick,
+  passive,
+  achievements,
+  rewards,
+  updated:Date.now()
+});
+}
 
 /* ================= UI ================= */
 
 function updateUI(){
-
-document.getElementById("points").innerText="Points : "+Math.floor(points);
-document.getElementById("score").innerText="Score : "+score;
-document.getElementById("stats").innerText=`Par clic : ${perClick} | Auto : ${passive}`;
+pointsDiv.innerText="Points : "+Math.floor(points);
+scoreDiv.innerText="Score : "+Math.floor(totalPoints/100);
+stats.innerText=`Par clic : ${perClick} | Auto : ${passive}`;
 }
+
+const pointsDiv=document.getElementById("points");
+const scoreDiv=document.getElementById("score");
 
 /* ================= TOAST ================= */
 
 function toast(msg){
-
 const t=document.createElement("div");
 t.className="toast";
 t.innerText=msg;
-
 document.body.appendChild(t);
-
 setTimeout(()=>t.classList.add("show"),50);
-setTimeout(()=>t.remove(),3000);
+setTimeout(()=>t.remove(),2500);
 }
-
-// Exposition des fonctions pour le HTML
-window.login = login;
-window.clickLiterature = clickLiterature;
-window.exportAllSaves = exportAllSaves;
-window.buyUpgrade = buyUpgrade;
-window.buyReward = buyReward;
 
 </script>
 </body>
 </html>
-
-
-
-
