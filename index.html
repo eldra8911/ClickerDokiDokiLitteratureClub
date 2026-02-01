@@ -1,3 +1,4 @@
+donc ça c'est bon :
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -159,7 +160,6 @@ const stats = document.getElementById("stats");
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-
 /* 🔥 CONFIG FIREBASE */
 const firebaseConfig = {
   apiKey: "AIzaSyAdV23J9R_9Ain53tymPqFZifyJKuoMZxI",
@@ -169,31 +169,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-function login(){
-    const u = usernameInput.value.trim();
-    const p = passwordInput.value.trim();
-    if(!u || !p) return alert("Pseudo + mot de passe");
-
-    player = u;
-    saveKey = "ddlc_" + CryptoJS.SHA256(u+p).toString();
-
-    loadGame();
-    loginScreen.style.display = "none";
-
-    clickSound.play().then(()=>{ clickSound.pause(); clickSound.currentTime=0 });
-    music.volume = 0.3;
-    music.play().then(()=>{ music.pause(); music.currentTime=0 });
-
-    renderShop();
-    renderAchievements();
-    renderRewards();
-    updateUI();
-    checkAchievements();
-
-    saveCloud(); // ← AJOUTÉ pour créer le doc dans Firestore
-}
-
-  
 /* ================= DATA ================= */
 let player="";
 let saveKey="";
@@ -377,7 +352,7 @@ window.clickLiterature = function() {
     // on garde seulement les clics de la dernière seconde
     clickTimes = clickTimes.filter(t => now - t < 1000);
 
-    if (clickTimes.length >= 10) return; // max 10 clics/seconde
+    if (clickTimes.length >= 5) return; // max 5 clics/seconde
     clickTimes.push(now);
 
     logo.classList.remove("bounce");
@@ -461,9 +436,7 @@ function loadGame() {
     totalPoints = d.totalPoints || 0;
     totalClicks = d.totalClicks || 0;
     achievements = d.achievements || achievements;
-    rewards = d.rewards || rewards;   // <-- ajoute ça
 }
-
 
 /* ================= FIREBASE ================= */
 async function saveCloud() {
@@ -474,11 +447,9 @@ async function saveCloud() {
         perClick,
         passive,
         achievements,
-        rewards,      // <-- ajouté
         updated: Date.now()
     });
 }
-
 
 /* ================= ACHIEVEMENTS ================= */
 function checkAchievements(){
@@ -534,4 +505,3 @@ function toast(msg) {
 </script>
 </body>
 </html>
-
