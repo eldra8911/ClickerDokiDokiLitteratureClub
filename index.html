@@ -159,6 +159,7 @@ const stats = document.getElementById("stats");
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
+
 /* 🔥 CONFIG FIREBASE */
 const firebaseConfig = {
   apiKey: "AIzaSyAdV23J9R_9Ain53tymPqFZifyJKuoMZxI",
@@ -167,6 +168,21 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+/* ================= LIVE PLAYERS ================= */
+import { onSnapshot, collection } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+onSnapshot(collection(db, "players"), (snapshot) => {
+  snapshot.docChanges().forEach((change) => {
+    if(change.type === "added" || change.type === "modified") {
+      const data = change.doc.data();
+      console.log("Joueur:", change.doc.id, data);
+
+      // exemple : mettre à jour ton UI avec leurs rewards et points
+      // tu peux créer une div #allPlayers et remplir avec data.points, data.achievements, data.rewards
+    }
+  });
+});
 
 /* ================= DATA ================= */
 let player="";
@@ -508,4 +524,5 @@ function toast(msg) {
 </script>
 </body>
 </html>
+
 
