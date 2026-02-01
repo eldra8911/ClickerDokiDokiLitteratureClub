@@ -367,163 +367,165 @@ const upgrades=[
 
 /* ================= LOGIN ================= */
 
-window.login = function(){
+const playBtn = document.getElementById("playBtn");
+playBtn.addEventListener("click", () => {
+    const u = username.value;
+    const p = password.value;
+    if(!u || !p) return alert("Pseudo + mot de passe");
 
-const u=username.value;
-const p=password.value;
-if(!u||!p) return alert("Pseudo + mot de passe");
+    player = u;
+    saveKey = "ddlc_" + CryptoJS.SHA256(u+p).toString();
 
-player=u;
-saveKey="ddlc_"+CryptoJS.SHA256(u+p).toString();
+    loadGame();
+    loginScreen.style.display = "none";
 
-loadGame();
+    /* Déblocage audio */
+    clickSound.play().then(() => { clickSound.pause(); clickSound.currentTime = 0; });
+    music.volume = 0.3;
+    music.play().then(() => { music.pause(); music.currentTime = 0; });
 
-loginScreen.style.display="none";
+    renderShop();
+    updateUI();
+    renderRewards();
+    renderAchievements();
+    checkAchievements();
+});
 
-/* Déblocage audio */
-clickSound.play().then(()=>{clickSound.pause();clickSound.currentTime=0});
-music.volume=0.3;
-music.play().then(()=>{music.pause();music.currentTime=0});
-
-renderShop();
-updateUI();
-renderRewards();
-renderAchievements();
-checkAchievements();
-}
 
 /* ================= CLICK ================= */
 
-window.clickLiterature = function(){
+window.clickLiterature = function() {
+    const logo = document.getElementById("logo");
+    logo.classList.remove("bounce");
+    void logo.offsetWidth;
+    logo.classList.add("bounce");
 
-const logo=document.getElementById("logo");
-logo.classList.remove("bounce");
-void logo.offsetWidth;
-logo.classList.add("bounce");
+    clickSound.pause();
+    clickSound.currentTime = 0;
+    clickSound.play().catch(()=>{});
 
-clickSound.pause();
-clickSound.currentTime=0;
-clickSound.play().catch(()=>{});
+    if(!musicStarted){
+        music.play();
+        musicStarted = true;
+    }
 
-if(!musicStarted){
-music.play();
-musicStarted=true;
+    points += perClick;
+    totalPoints += perClick;
+    totalClicks++;
+
+    updateUI();
+    saveGame();
+    saveCloud();
+    checkAchievements();
 }
 
-points+=perClick;
-totalPoints+=perClick;
-totalClicks++;
-
-updateUI();
-saveGame();
-saveCloud();
-checkAchievements();
-}
 
 /* ================= SHOP ================= */
 
-function renderShop(){
-shopItems.innerHTML="";
-upgrades.forEach((u,i)=>{
-const d=document.createElement("div");
-d.className="upgrade";
-d.innerHTML=`
-<b>${u.name}</b><br>
-+${u.perClick}/clic | +${u.passive}/sec<br>
-Coût : ${u.cost}<br>
-<button onclick="buy(${i})">Acheter</button>`;
-shopItems.appendChild(d);
-});
+function renderShop() {
+    shopItems.innerHTML = "";
+    upgrades.forEach((u, i) => {
+        const d = document.createElement("div");
+        d.className = "upgrade";
+        d.innerHTML = `
+            <b>${u.name}</b><br>
+            +${u.perClick}/clic | +${u.passive}/sec<br>
+            Coût : ${u.cost}<br>
+            <button onclick="buy(${i})">Acheter</button>
+        `;
+        shopItems.appendChild(d);
+    });
 }
 
-window.buy=function(i){
-const u=upgrades[i];
-if(points<u.cost) return;
-points-=u.cost;
-perClick+=u.perClick;
-passive+=u.passive;
-toast("Amélioration achetée");
-updateUI();
-saveGame();
-saveCloud();
+window.buy = function(i) {
+    const u = upgrades[i];
+    if(points < u.cost) return;
+    points -= u.cost;
+    perClick += u.perClick;
+    passive += u.passive;
+    toast("Amélioration achetée");
+    updateUI();
+    saveGame();
+    saveCloud();
 }
+
 
 /* ================= PASSIVE ================= */
 
 setInterval(()=>{
-  if(passive>0){
-    points+=passive;
-    totalPoints+=passive;
-    updateUI();
-    saveGame();
-    saveCloud();
-    checkAchievements(); // 🔥 IMPORTANT
-  }
-},1000);
+    if(passive > 0){
+        points += passive;
+        totalPoints += passive;
+        updateUI();
+        saveGame();
+        saveCloud();
+        checkAchievements();
+    }
+}, 1000);
+
 
 /* ================= SAVE ================= */
 
-function saveGame(){
-  localStorage.setItem(saveKey, JSON.stringify({
-    points, perClick, passive, totalPoints, totalClicks,
-    achievements, rewards
-  }));
+function saveGame() {
+    localStorage.setItem(saveKey, JSON.stringify({
+        points, perClick, passive, totalPoints, totalClicks,
+        achievements, rewards
+    }));
 }
 
-function loadGame(){
-const s=localStorage.getItem(saveKey);
-if(!s) return;
-const d=JSON.parse(s);
-points=d.points||0;
-perClick=d.perClick||1;
-passive=d.passive||0;
-totalPoints=d.totalPoints||0;
-totalClicks=d.totalClicks||0;
-achievements = d.achievements || achievements;
-rewards = d.rewards || rewards;
+function loadGame() {
+    const s = localStorage.getItem(saveKey);
+    if(!s) return;
+    const d = JSON.parse(s);
+    points = d.points || 0;
+    perClick = d.perClick || 1;
+    passive = d.passive || 0;
+    totalPoints = d.totalPoints || 0;
+    totalClicks = d.totalClicks || 0;
+    achievements = d.achievements || achievements;
+    rewards = d.rewards || rewards;
 }
+
 
 /* ================= FIREBASE ================= */
 
-async function saveCloud(){
-await setDoc(doc(db,"players",player),{
-  points,
-  score:Math.floor(totalPoints/100),
-  totalClicks,
-  perClick,
-  passive,
-  achievements,
-  rewards,
-  updated:Date.now()
-});
+async function saveCloud() {
+    await setDoc(doc(db,"players",player),{
+        points,
+        score: Math.floor(totalPoints/100),
+        totalClicks,
+        perClick,
+        passive,
+        achievements,
+        rewards,
+        updated: Date.now()
+    });
 }
+
 
 /* ================= UI ================= */
 
-function updateUI(){
-pointsDiv.innerText="Points : "+Math.floor(points);
-scoreDiv.innerText="Score : "+Math.floor(totalPoints/100);
-stats.innerText=`Par clic : ${perClick} | Auto : ${passive}`;
+function updateUI() {
+    pointsDiv.innerText = "Points : " + Math.floor(points);
+    scoreDiv.innerText = "Score : " + Math.floor(totalPoints/100);
+    stats.innerText = `Par clic : ${perClick} | Auto : ${passive}`;
 }
 
-const pointsDiv=document.getElementById("points");
-const scoreDiv=document.getElementById("score");
+const pointsDiv = document.getElementById("points");
+const scoreDiv = document.getElementById("score");
+
 
 /* ================= TOAST ================= */
 
-function toast(msg){
-const t=document.createElement("div");
-t.className="toast";
-t.innerText=msg;
-document.body.appendChild(t);
-setTimeout(()=>t.classList.add("show"),50);
-setTimeout(()=>t.remove(),2500);
+function toast(msg) {
+    const t = document.createElement("div");
+    t.className = "toast";
+    t.innerText = msg;
+    document.body.appendChild(t);
+    setTimeout(()=>t.classList.add("show"),50);
+    setTimeout(()=>t.remove(),2500);
 }
 
 </script>
 </body>
 </html>
-
-
-
-
