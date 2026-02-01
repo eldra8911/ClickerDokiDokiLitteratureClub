@@ -183,6 +183,7 @@ let totalClicks=0;
 let musicStarted=false;
 
 let achievements = [
+  // ─── Achievements classiques (déjà existants) ───
   { id:"writer_1", name:"Jeune Écrivain", description:"Gagner 1 000 points", goal:1000, type:"points", pointsBonus:0.5, unlocked:false },
   { id:"writer_2", name:"Écrivain ? Cliqueur débutant", description:"Gagner 10 000 points", goal:10000, type:"points", pointsBonus:1.0, unlocked:false },
   { id:"writer_3", name:"Cliqueur Obstiné", description:"Gagner 50 000 points", goal:50000, type:"points", pointsBonus:5.0, unlocked:false },
@@ -195,11 +196,41 @@ let achievements = [
   { id:"writer_10", name:"Spameur Fou", description:"Gagner 15 000 000 points", goal:15000000, type:"points", pointsBonus:750.0, unlocked:false },
   { id:"writer_11", name:"Spameur Enragé", description:"Gagner 30 000 000 points", goal:30000000, type:"points", pointsBonus:1500.0, unlocked:false },
   { id:"writer_12", name:"Spameur ? Non... P̴l̷a̶y̸e̸r̸", description:"Gagner 50 000 000 points", goal:50000000, type:"points", pointsBonus:2500.0, unlocked:false }
+  // ─── Achievements liés aux rewards endgame ───
+  { id:"monika_first", name:"Premier pas vers Monika", description:"Acheter MONIKA.chr", type:"reward", rewardId:"MONIKA", pointsBonus:50, unlocked:false },
+  { id:"glitch_master", name:"Maître du glitch", description:"Acheter glitch.log", type:"reward", rewardId:"GLITCH_LOG", pointsBonus:100, unlocked:false },
+  { id:"repairer", name:"Réparateur", description:"Acheter script_repair.exe", type:"reward", rewardId:"SCRIPT_FIX", pointsBonus:200, unlocked:false },
+  { id:"backup_savior", name:"Sauveur de Monika", description:"Acheter monika_backup.chr", type:"reward", rewardId:"BACKUP_MONIKA", pointsBonus:500, unlocked:false },
+  { id:"world_restorer", name:"Restaurateur", description:"Acheter restore_world.exe", type:"reward", rewardId:"RESTORE", pointsBonus:1000, unlocked:false },
+  { id:"just_monika", name:"Just Monika", description:"Acheter Just Monika", type:"reward", rewardId:"JUST_MONIKA", pointsBonus:2000, unlocked:false },
+  { id:"monika_free", name:"Libératrice", description:"Acheter Monika_Free.chr", type:"reward", rewardId:"MONIKA_FREE", pointsBonus:5000, unlocked:false }
 ];
 
 let rewards = [
+  // ─── Début DDLC ───
   { id:"YURI", name:"💾 YURI.chr", cost:5000, purchased:false, code:null },
-  { id:"SAYORI", name:"🎀 SAYORI.chr", cost:15000, purchased:false, code:null }
+  { id:"SAYORI", name:"🎀 SAYORI.chr", cost:15000, purchased:false, code:null },
+  { id:"NATSUKI", name:"🧁 NATSUKI.chr", cost:40000, purchased:false, code:null },
+
+  // ─── Monika apparaît ───
+  { id:"MONIKA", name:"👁️ MONIKA.chr", cost:150000, purchased:false, code:null },
+
+  // ─── Corruption du jeu ───
+  { id:"GLITCH_LOG", name:"🩸 glitch.log", cost:750000, purchased:false, code:null },
+  { id:"SAVE_BROKEN", name:"💥 save_corrupted.dat", cost:2500000, purchased:false, code:null },
+  { id:"TRACE_PLAYER", name:"📁 traces_player.txt", cost:7000000, purchased:false, code:null },
+
+  // ─── Prise de conscience ───
+  { id:"MEMORY", name:"🧠 memory_dump.bin", cost:15000000, purchased:false, code:null },
+  { id:"SCRIPT_FIX", name:"🛠️ script_repair.exe", cost:30000000, purchased:false, code:null },
+
+  // ─── Sauver Monika ───
+  { id:"BACKUP_MONIKA", name:"💾 monika_backup.chr", cost:60000000, purchased:false, code:null },
+  { id:"RESTORE", name:"🔄 restore_world.exe", cost:120000000, purchased:false, code:null },
+
+  // ─── Endgame absolu ───
+  { id:"JUST_MONIKA", name:"👁️ Just Monika", cost:250000000, purchased:false, code:null },
+  { id:"MONIKA_FREE", name:"🌸 Monika_Free.chr", cost:500000000, purchased:false, code:null }
 ];
 
 function checkAchievements(){
@@ -489,5 +520,6 @@ setTimeout(()=>t.remove(),2500);
 </script>
 </body>
 </html>
+
 
 
