@@ -342,7 +342,13 @@ playBtn.addEventListener("click", login);
 
 /* ================= CLICK ================= */
 const logo = document.getElementById("logo");
+let lastClickTime = 0; // <-- ajoute ça en haut, à côté de tes autres variables
+
 window.clickLiterature = function() {
+    const now = Date.now();
+    if (now - lastClickTime < 50) return; // bloque les clics trop rapides
+    lastClickTime = now;
+
     logo.classList.remove("bounce");
     void logo.offsetWidth;
     logo.classList.add("bounce");
@@ -492,3 +498,4 @@ function toast(msg) {
 </script>
 </body>
 </html>
+
