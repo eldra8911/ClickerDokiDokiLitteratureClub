@@ -118,7 +118,7 @@ transition:.3s;
 <h2>Literature.exe</h2>
 <input id="username" placeholder="Pseudo">
 <input id="password" type="password" placeholder="Mot de passe">
-<button onclick="login()">Jouer</button>
+<button id="playBtn">Jouer</button>
 </div>
 
 <audio id="music" loop src="audio/Doki Doki Literature Club! OST - Doki Doki Literature Club! (Main Theme).mp3"></audio>
@@ -364,11 +364,12 @@ const upgrades=[
 
 /* ================= LOGIN ================= */
 
+const playBtn = document.getElementById("playBtn");
 const usernameInput = document.getElementById("username");
 const passwordInput = document.getElementById("password");
 const loginScreen = document.getElementById("loginScreen");
 
-window.login = function() {
+function login(){
     const u = usernameInput.value.trim();
     const p = passwordInput.value.trim();
     if(!u || !p) return alert("Pseudo + mot de passe");
@@ -377,13 +378,11 @@ window.login = function() {
     saveKey = "ddlc_" + CryptoJS.SHA256(u+p).toString();
 
     loadGame();
-
     loginScreen.style.display = "none";
 
-    // Déblocage audio
-    clickSound.play().then(()=>{ clickSound.pause(); clickSound.currentTime=0; });
+    clickSound.play().then(()=>{ clickSound.pause(); clickSound.currentTime=0 });
     music.volume = 0.3;
-    music.play().then(()=>{ music.pause(); music.currentTime=0; });
+    music.play().then(()=>{ music.pause(); music.currentTime=0 });
 
     renderShop();
     renderRewards();
@@ -391,6 +390,9 @@ window.login = function() {
     updateUI();
     checkAchievements();
 }
+
+playBtn.addEventListener("click", login);
+
 
 /* ================= CLICK ================= */
 
@@ -552,3 +554,4 @@ function toast(msg) {
 </script>
 </body>
 </html>
+
