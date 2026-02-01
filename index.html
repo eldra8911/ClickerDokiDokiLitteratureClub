@@ -387,6 +387,8 @@ renderShop();
 updateUI();
 }
 
+window.login = login;
+
 /* ================= SAVE ================= */
 
 function saveGame(){
@@ -606,6 +608,14 @@ setTimeout(()=>t.classList.add("show"),50);
 setTimeout(()=>t.remove(),3000);
 }
 
+// Exposition des fonctions pour le HTML
+window.login = login;
+window.clickLiterature = clickLiterature;
+window.exportAllSaves = exportAllSaves;
+window.buyUpgrade = buyUpgrade;
+window.buyReward = buyReward;
+
 </script>
 </body>
 </html>
+
