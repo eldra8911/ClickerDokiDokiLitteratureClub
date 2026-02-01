@@ -352,7 +352,7 @@ window.clickLiterature = function() {
     // on garde seulement les clics de la dernière seconde
     clickTimes = clickTimes.filter(t => now - t < 1000);
 
-    if (clickTimes.length >= 5) return; // max 5 clics/seconde
+    if (clickTimes.length >= 10) return; // max 10 clics/seconde
     clickTimes.push(now);
 
     logo.classList.remove("bounce");
@@ -505,3 +505,4 @@ function toast(msg) {
 </script>
 </body>
 </html>
+
