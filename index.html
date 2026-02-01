@@ -435,7 +435,9 @@ function loadGame() {
     totalPoints = d.totalPoints || 0;
     totalClicks = d.totalClicks || 0;
     achievements = d.achievements || achievements;
+    rewards = d.rewards || rewards;   // <-- ajoute ça
 }
+
 
 /* ================= FIREBASE ================= */
 async function saveCloud() {
@@ -446,9 +448,11 @@ async function saveCloud() {
         perClick,
         passive,
         achievements,
+        rewards,      // <-- ajouté
         updated: Date.now()
     });
 }
+
 
 /* ================= ACHIEVEMENTS ================= */
 function checkAchievements(){
@@ -504,3 +508,4 @@ function toast(msg) {
 </script>
 </body>
 </html>
+
