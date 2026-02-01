@@ -6,106 +6,106 @@
 
 <style>
 html,body{
-margin:0;
-height:100%;
-overflow:hidden;
-font-family:monospace;
-color:white;
-background:black;
+  margin:0;
+  height:100%;
+  overflow:hidden;
+  font-family:monospace;
+  color:white;
+  background:black;
 }
 
 body{
-background:url("Club.png") center / cover no-repeat fixed;
+  background:url("Club.png") center / cover no-repeat fixed;
 }
 
 #loginScreen{
-position:fixed;
-inset:0;
-background:black;
-display:flex;
-flex-direction:column;
-justify-content:center;
-align-items:center;
-z-index:999;
+  position:fixed;
+  inset:0;
+  background:black;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  z-index:999;
 }
 
 input,button{
-padding:10px;
-margin:5px;
-font-family:monospace;
+  padding:10px;
+  margin:5px;
+  font-family:monospace;
 }
 
 button{
-background:black;
-color:white;
-border:1px solid #ff6fa9;
-cursor:pointer;
+  background:black;
+  color:white;
+  border:1px solid #ff6fa9;
+  cursor:pointer;
 }
 
 button:hover{
-background:#ff6fa9;
-color:black;
+  background:#ff6fa9;
+  color:black;
 }
 
 #overlay{
-display:flex;
-height:100vh;
+  display:flex;
+  height:100vh;
 }
 
 #main{
-flex:1;
-display:flex;
-flex-direction:column;
-justify-content:center;
-align-items:center;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
 }
 
 #logo{
-width:340px;
-cursor:pointer;
+  width:340px;
+  cursor:pointer;
 }
 
 .bounce{
-animation:bounce .15s;
+  animation:bounce .15s;
 }
 
 @keyframes bounce{
-0%{transform:scale(1)}
-50%{transform:scale(.95)}
-100%{transform:scale(1)}
+  0%{transform:scale(1)}
+  50%{transform:scale(.95)}
+  100%{transform:scale(1)}
 }
 
 #shop{
-width:300px;
-background:rgba(0,0,0,.9);
-padding:10px;
-overflow-y:auto;
+  width:300px;
+  background:rgba(0,0,0,.9);
+  padding:10px;
+  overflow-y:auto;
 }
 
 .upgrade{
-border:1px solid #444;
-padding:8px;
-margin-bottom:8px;
+  border:1px solid #444;
+  padding:8px;
+  margin-bottom:8px;
 }
 
 #statsBar{
-position:fixed;
-bottom:10px;
-left:10px;
-background:rgba(0,0,0,.8);
-border:1px solid #ff6fa9;
-padding:10px;
+  position:fixed;
+  bottom:10px;
+  left:10px;
+  background:rgba(0,0,0,.8);
+  border:1px solid #ff6fa9;
+  padding:10px;
 }
 
 .toast{
-position:fixed;
-bottom:80px;
-left:10px;
-background:#ff6fa9;
-color:black;
-padding:8px;
-opacity:0;
-transition:.3s;
+  position:fixed;
+  bottom:80px;
+  left:10px;
+  background:#ff6fa9;
+  color:black;
+  padding:8px;
+  opacity:0;
+  transition:.3s;
 }
 
 .toast.show{opacity:1}
@@ -115,10 +115,10 @@ transition:.3s;
 <body>
 
 <div id="loginScreen">
-<h2>Literature.exe</h2>
-<input id="username" placeholder="Pseudo">
-<input id="password" type="password" placeholder="Mot de passe">
-<button id="playBtn">Jouer</button>
+  <h2>Literature.exe</h2>
+  <input id="username" placeholder="Pseudo">
+  <input id="password" type="password" placeholder="Mot de passe">
+  <button id="playBtn">Jouer</button>
 </div>
 
 <audio id="music" loop src="audio/Doki Doki Literature Club! OST - Doki Doki Literature Club! (Main Theme).mp3"></audio>
@@ -126,53 +126,49 @@ transition:.3s;
 
 <div id="overlay">
 
-<div id="main">
-<img id="logo" src="Logo.png" onclick="clickLiterature()">
-<p style="opacity:.6;">Clique sur le logo</p>
-</div>
+  <div id="main">
+    <img id="logo" src="Logo.png" onclick="clickLiterature()">
+    <p style="opacity:.6;">Clique sur le logo</p>
+  </div>
 
-<div id="shop">
-<h3>Boutique</h3>
-<div id="shopItems"></div>
-<h3>🎁 Rewards</h3>
-<div id="rewardItems"></div>
+  <div id="shop">
+    <h3>Boutique</h3>
+    <div id="shopItems"></div>
+    <h3>🎁 Rewards</h3>
+     <div id="rewardItems"></div>
 
-<h3>🏆 Achievements</h3>
-<div id="achievementItems"></div>
-</div>
+    <h3>🏆 Achievements</h3>
+    <div id="achievementItems"></div>
+  </div>
 
 </div>
 
 <div id="statsBar">
-<div id="points">Points : 0</div>
-<div id="score">Score : 0</div>
-<div id="stats">Par clic : 1 | Auto : 0</div>
+  <div id="points">Points : 0</div>
+  <div id="score">Score : 0</div>
+  <div id="stats">Par clic : 1 | Auto : 0</div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
 <script type="module">
-
 const shopItems = document.getElementById("shopItems");
-const rewardItems = document.getElementById("rewardItems");
 const achievementItems = document.getElementById("achievementItems");
 const stats = document.getElementById("stats");
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, doc, setDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 /* 🔥 CONFIG FIREBASE */
 const firebaseConfig = {
-apiKey: "AIzaSyAdV23J9R_9Ain53tymPqFZifyJKuoMZxI",
-authDomain: "literature-exe.firebaseapp.com",
-projectId: "literature-exe",
+  apiKey: "AIzaSyAdV23J9R_9Ain53tymPqFZifyJKuoMZxI",
+  authDomain: "literature-exe.firebaseapp.com",
+  projectId: "literature-exe",
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 /* ================= DATA ================= */
-
 let player="";
 let saveKey="";
 let points=0;
@@ -183,129 +179,19 @@ let totalClicks=0;
 let musicStarted=false;
 
 let achievements = [
-  // ─── Achievements classiques (déjà existants) ───
-  { id:"writer_1", name:"Jeune Écrivain", description:"Gagner 1 000 points", goal:1000, type:"points", pointsBonus:0.5, unlocked:false },
-  { id:"writer_2", name:"Écrivain ? Cliqueur débutant", description:"Gagner 10 000 points", goal:10000, type:"points", pointsBonus:1.0, unlocked:false },
-  { id:"writer_3", name:"Cliqueur Obstiné", description:"Gagner 50 000 points", goal:50000, type:"points", pointsBonus:5.0, unlocked:false },
-  { id:"writer_4", name:"Cliqueur Fou", description:"Gagner 100 000 points", goal:100000, type:"points", pointsBonus:10.0, unlocked:false },
-  { id:"writer_5", name:"Cliqueur Enragé", description:"Gagner 500 000 points", goal:500000, type:"points", pointsBonus:25.0, unlocked:false },
-  { id:"writer_6", name:"Cliqueur ? Non... Spameur !", description:"Gagner 1 000 000 points", goal:1000000, type:"points", pointsBonus:50.0, unlocked:false },
-  { id:"writer_7", name:"Spameur Débutant", description:"Gagner 2 000 000 points", goal:2000000, type:"points", pointsBonus:100.0, unlocked:false },
-  { id:"writer_8", name:"Spameur Obstiné", description:"Gagner 5 000 000 points", goal:5000000, type:"points", pointsBonus:250.0, unlocked:false },
-  { id:"writer_9", name:"Spameur Déterminé", description:"Gagner 10 000 000 points", goal:10000000, type:"points", pointsBonus:500.0, unlocked:false },
-  { id:"writer_10", name:"Spameur Fou", description:"Gagner 15 000 000 points", goal:15000000, type:"points", pointsBonus:750.0, unlocked:false },
-  { id:"writer_11", name:"Spameur Enragé", description:"Gagner 30 000 000 points", goal:30000000, type:"points", pointsBonus:1500.0, unlocked:false },
-  { id:"writer_12", name:"Spameur ? Non... P̴l̷a̶y̸e̸r̸", description:"Gagner 50 000 000 points", goal:50000000, type:"points", pointsBonus:2500.0, unlocked:false }
-  // ─── Achievements liés aux rewards endgame ───
-  { id:"monika_first", name:"Premier pas vers Monika", description:"Acheter MONIKA.chr", type:"reward", rewardId:"MONIKA", pointsBonus:50, unlocked:false },
-  { id:"glitch_master", name:"Maître du glitch", description:"Acheter glitch.log", type:"reward", rewardId:"GLITCH_LOG", pointsBonus:100, unlocked:false },
-  { id:"repairer", name:"Réparateur", description:"Acheter script_repair.exe", type:"reward", rewardId:"SCRIPT_FIX", pointsBonus:200, unlocked:false },
-  { id:"backup_savior", name:"Sauveur de Monika", description:"Acheter monika_backup.chr", type:"reward", rewardId:"BACKUP_MONIKA", pointsBonus:500, unlocked:false },
-  { id:"world_restorer", name:"Restaurateur", description:"Acheter restore_world.exe", type:"reward", rewardId:"RESTORE", pointsBonus:1000, unlocked:false },
-  { id:"just_monika", name:"Just Monika", description:"Acheter Just Monika", type:"reward", rewardId:"JUST_MONIKA", pointsBonus:2000, unlocked:false },
-  { id:"monika_free", name:"Libératrice", description:"Acheter Monika_Free.chr", type:"reward", rewardId:"MONIKA_FREE", pointsBonus:5000, unlocked:false }
+{ id:"writer_1", name:"Jeune Écrivain", description:"Gagner 1 000 points", goal:1000, type:"points", pointsBonus:0.5, unlocked:false },
+{ id:"writer_2", name:"Écrivain ? Cliqueur débutant", description:"Gagner 10 000 points", goal:10000, type:"points", pointsBonus:1.0, unlocked:false },
+{ id:"writer_3", name:"Cliqueur Obstiné", description:"Gagner 50 000 points", goal:50000, type:"points", pointsBonus:5.0, unlocked:false },
+{ id:"writer_4", name:"Cliqueur Fou", description:"Gagner 100 000 points", goal:100000, type:"points", pointsBonus:10.0, unlocked:false },
+{ id:"writer_5", name:"Cliqueur Enragé", description:"Gagner 500 000 points", goal:500000, type:"points", pointsBonus:25.0, unlocked:false },
+{ id:"writer_6", name:"Cliqueur ? Non... Spameur !", description:"Gagner 1 000 000 points", goal:1000000, type:"points", pointsBonus:50.0, unlocked:false },
+{ id:"writer_7", name:"Spameur Débutant", description:"Gagner 2 000 000 points", goal:2000000, type:"points", pointsBonus:100.0, unlocked:false },
+{ id:"writer_8", name:"Spameur Obstiné", description:"Gagner 5 000 000 points", goal:5000000, type:"points", pointsBonus:250.0, unlocked:false },
+{ id:"writer_9", name:"Spameur Déterminé", description:"Gagner 10 000 000 points", goal:10000000, type:"points", pointsBonus:500.0, unlocked:false },
+{ id:"writer_10", name:"Spameur Fou", description:"Gagner 15 000 000 points", goal:15000000, type:"points", pointsBonus:750.0, unlocked:false },
+{ id:"writer_11", name:"Spameur Enragé", description:"Gagner 30 000 000 points", goal:30000000, type:"points", pointsBonus:1500.0, unlocked:false },
+{ id:"writer_12", name:"Spameur ? Non... P̴l̷a̶y̸e̸r̸", description:"Gagner 50 000 000 points", goal:50000000, type:"points", pointsBonus:2500.0, unlocked:false }
 ];
-
-let rewards = [
-  // ─── Début DDLC ───
-  { id:"YURI", name:"💾 YURI.chr", cost:5000, purchased:false, code:null },
-  { id:"SAYORI", name:"🎀 SAYORI.chr", cost:15000, purchased:false, code:null },
-  { id:"NATSUKI", name:"🧁 NATSUKI.chr", cost:40000, purchased:false, code:null },
-
-  // ─── Monika apparaît ───
-  { id:"MONIKA", name:"👁️ MONIKA.chr", cost:150000, purchased:false, code:null },
-
-  // ─── Corruption du jeu ───
-  { id:"GLITCH_LOG", name:"🩸 glitch.log", cost:750000, purchased:false, code:null },
-  { id:"SAVE_BROKEN", name:"💥 save_corrupted.dat", cost:2500000, purchased:false, code:null },
-  { id:"TRACE_PLAYER", name:"📁 traces_player.txt", cost:7000000, purchased:false, code:null },
-
-  // ─── Prise de conscience ───
-  { id:"MEMORY", name:"🧠 memory_dump.bin", cost:15000000, purchased:false, code:null },
-  { id:"SCRIPT_FIX", name:"🛠️ script_repair.exe", cost:30000000, purchased:false, code:null },
-
-  // ─── Sauver Monika ───
-  { id:"BACKUP_MONIKA", name:"💾 monika_backup.chr", cost:60000000, purchased:false, code:null },
-  { id:"RESTORE", name:"🔄 restore_world.exe", cost:120000000, purchased:false, code:null },
-
-  // ─── Endgame absolu ───
-  { id:"JUST_MONIKA", name:"👁️ Just Monika", cost:250000000, purchased:false, code:null },
-  { id:"MONIKA_FREE", name:"🌸 Monika_Free.chr", cost:500000000, purchased:false, code:null }
-];
-
-function checkAchievements(){
-  achievements.forEach(a=>{
-    if(a.unlocked) return;
-
-    if(a.type === "points" && totalPoints >= a.goal){
-      unlockAchievement(a);
-    }
-  });
-
-  renderAchievements();
-}
-
-function unlockAchievement(a){
-  a.unlocked = true;
-
-  // BONUS → on boost le clic (propre et visible)
-  perClick += a.pointsBonus;
-
-  toast("🏆 Achievement débloqué : " + a.name);
-
-  saveGame();
-  saveCloud();
-}
-function renderAchievements(){
-  achievementItems.innerHTML="";
-
-  achievements.forEach(a=>{
-    const d=document.createElement("div");
-    d.className="upgrade";
-    d.innerHTML=`
-      <b>${a.name}</b><br>
-      <small>${a.description}</small><br>
-      ${a.unlocked ? "✅ Débloqué" : "🔒 Verrouillé"}
-    `;
-    achievementItems.appendChild(d);
-  });
-}
-
-function renderRewards(){
-  rewardItems.innerHTML="";
-  rewards.forEach((r,i)=>{
-    const d=document.createElement("div");
-    d.className="upgrade";
-    d.innerHTML=`
-      <b>${r.name}</b><br>
-      ${r.purchased ? "<small>Code généré</small>" : "Coût : "+r.cost}<br>
-      <button ${r.purchased?"disabled":""} onclick="buyReward(${i})">
-        ${r.purchased?"Débloqué":"Acheter"}
-      </button>
-    `;
-    rewardItems.appendChild(d);
-  });
-}
-window.buyReward = function(i){
-  const r = rewards[i];
-  if(points < r.cost || r.purchased) return;
-
-  points -= r.cost;
-  r.purchased = true;
-
-  r.code = CryptoJS.AES.encrypt(
-    `DDLC|${r.id}|PLAYER=${player}|TIME=${Date.now()}`,
-    "SECRET_EVENT_KEY"
-  ).toString();
-
-  toast("🎁 Reward débloquée !");
-  renderRewards();
-  saveGame();
-  saveCloud();
-};
-
-
-/* ================= UPGRADES ================= */
 
 const upgrades=[
   {name:"✒️ Stylo", cost:50, perClick:0.5, passive:0},
@@ -362,8 +248,70 @@ const upgrades=[
   {name:"🗃️ Serveur maître", cost:500000000, perClick:40000000, passive:600000}
 ];
 
-/* ================= LOGIN ================= */
+let rewards = [
+  // ─── Début DDLC ───
+  { id:"YURI", name:"💾 YURI.chr", cost:5000, purchased:false, code:null },
+  { id:"SAYORI", name:"🎀 SAYORI.chr", cost:15000, purchased:false, code:null },
+  { id:"NATSUKI", name:"🧁 NATSUKI.chr", cost:40000, purchased:false, code:null },
 
+  // ─── Monika apparaît ───
+  { id:"MONIKA", name:"👁️ MONIKA.chr", cost:150000, purchased:false, code:null },
+
+  // ─── Corruption du jeu ───
+  { id:"GLITCH_LOG", name:"🩸 glitch.log", cost:750000, purchased:false, code:null },
+  { id:"SAVE_BROKEN", name:"💥 save_corrupted.dat", cost:2500000, purchased:false, code:null },
+  { id:"TRACE_PLAYER", name:"📁 traces_player.txt", cost:7000000, purchased:false, code:null },
+
+  // ─── Prise de conscience ───
+  { id:"MEMORY", name:"🧠 memory_dump.bin", cost:15000000, purchased:false, code:null },
+  { id:"SCRIPT_FIX", name:"🛠️ script_repair.exe", cost:30000000, purchased:false, code:null },
+
+  // ─── Sauver Monika ───
+  { id:"BACKUP_MONIKA", name:"💾 monika_backup.chr", cost:60000000, purchased:false, code:null },
+  { id:"RESTORE", name:"🔄 restore_world.exe", cost:120000000, purchased:false, code:null },
+
+  // ─── Endgame absolu ───
+  { id:"JUST_MONIKA", name:"👁️ Just Monika", cost:250000000, purchased:false, code:null },
+  { id:"MONIKA_FREE", name:"🌸 Monika_Free.chr", cost:500000000, purchased:false, code:null }
+];
+
+function renderRewards(){
+  const rewardItems = document.getElementById("rewardItems");
+  rewardItems.innerHTML="";
+  rewards.forEach((r,i)=>{
+    const d=document.createElement("div");
+    d.className="upgrade";
+    d.innerHTML=`
+      <b>${r.name}</b><br>
+      ${r.purchased ? "<small>Code généré</small>" : "Coût : "+r.cost}<br>
+      <button ${r.purchased?"disabled":""} onclick="buyReward(${i})">
+        ${r.purchased?"Débloqué":"Acheter"}
+      </button>
+    `;
+    rewardItems.appendChild(d);
+  });
+}
+
+window.buyReward = function(i){
+  const r = rewards[i];
+  if(points < r.cost || r.purchased) return;
+
+  points -= r.cost;
+  r.purchased = true;
+
+  // Code simple pour la récompense
+  r.code = CryptoJS.AES.encrypt(
+    `DDLC|${r.id}|PLAYER=${player}|TIME=${Date.now()}`,
+    "SECRET_EVENT_KEY"
+  ).toString();
+
+  toast("🎁 Reward débloquée !");
+  renderRewards();
+  saveGame();
+  saveCloud();
+}
+
+/* ================= LOGIN ================= */
 const playBtn = document.getElementById("playBtn");
 const usernameInput = document.getElementById("username");
 const passwordInput = document.getElementById("password");
@@ -385,21 +333,18 @@ function login(){
     music.play().then(()=>{ music.pause(); music.currentTime=0 });
 
     renderShop();
-    renderRewards();
     renderAchievements();
+    renderRewards(); // ← Ajouté
     updateUI();
     checkAchievements();
 }
-
 playBtn.addEventListener("click", login);
 
-
 /* ================= CLICK ================= */
-
 const logo = document.getElementById("logo");
 window.clickLiterature = function() {
     logo.classList.remove("bounce");
-    void logo.offsetWidth; // restart animation
+    void logo.offsetWidth;
     logo.classList.add("bounce");
 
     clickSound.pause();
@@ -420,9 +365,8 @@ window.clickLiterature = function() {
     saveCloud();
     checkAchievements();
 }
-  
-/* ================= SHOP ================= */
 
+/* ================= SHOP ================= */
 function renderShop() {
     shopItems.innerHTML = "";
     upgrades.forEach((u, i) => {
@@ -450,33 +394,7 @@ window.buy = function(i) {
     saveCloud();
 }
 
-
-window.login = function() {
-    const u = username.value;
-    const p = password.value;
-    if(!u || !p) return alert("Pseudo + mot de passe");
-
-    player = u;
-    saveKey = "ddlc_" + CryptoJS.SHA256(u+p).toString();
-
-    loadGame();
-    loginScreen.style.display = "none";
-
-    clickSound.play().then(() => { clickSound.pause(); clickSound.currentTime = 0; });
-    music.volume = 0.3;
-    music.play().then(() => { music.pause(); music.currentTime = 0; });
-
-    renderShop();
-    updateUI();
-    renderRewards();
-    renderAchievements();
-    checkAchievements();
-}
-
-
-
 /* ================= PASSIVE ================= */
-
 setInterval(()=>{
     if(passive > 0){
         points += passive;
@@ -488,16 +406,13 @@ setInterval(()=>{
     }
 }, 1000);
 
-
 /* ================= SAVE ================= */
-
 function saveGame() {
     localStorage.setItem(saveKey, JSON.stringify({
         points, perClick, passive, totalPoints, totalClicks,
-        achievements, rewards
+        achievements
     }));
 }
-
 function loadGame() {
     const s = localStorage.getItem(saveKey);
     if(!s) return;
@@ -508,12 +423,9 @@ function loadGame() {
     totalPoints = d.totalPoints || 0;
     totalClicks = d.totalClicks || 0;
     achievements = d.achievements || achievements;
-    rewards = d.rewards || rewards;
 }
 
-
 /* ================= FIREBASE ================= */
-
 async function saveCloud() {
     await setDoc(doc(db,"players",player),{
         points,
@@ -522,26 +434,53 @@ async function saveCloud() {
         perClick,
         passive,
         achievements,
-        rewards,
         updated: Date.now()
     });
 }
 
+/* ================= ACHIEVEMENTS ================= */
+function checkAchievements(){
+  achievements.forEach(a=>{
+    if(a.unlocked) return;
+    if(totalPoints >= a.goal){
+      unlockAchievement(a);
+    }
+  });
+  renderAchievements();
+}
+
+function unlockAchievement(a){
+  a.unlocked = true;
+  perClick += a.pointsBonus;
+  toast("🏆 Achievement débloqué : " + a.name);
+  saveGame();
+  saveCloud();
+}
+
+function renderAchievements(){
+  achievementItems.innerHTML="";
+  achievements.forEach(a=>{
+    const d=document.createElement("div");
+    d.className="upgrade";
+    d.innerHTML=`
+      <b>${a.name}</b><br>
+      <small>${a.description}</small><br>
+      ${a.unlocked ? "✅ Débloqué" : "🔒 Verrouillé"}
+    `;
+    achievementItems.appendChild(d);
+  });
+}
 
 /* ================= UI ================= */
-
 function updateUI() {
     pointsDiv.innerText = "Points : " + Math.floor(points);
     scoreDiv.innerText = "Score : " + Math.floor(totalPoints/100);
     stats.innerText = `Par clic : ${perClick} | Auto : ${passive}`;
 }
-
 const pointsDiv = document.getElementById("points");
 const scoreDiv = document.getElementById("score");
 
-
 /* ================= TOAST ================= */
-
 function toast(msg) {
     const t = document.createElement("div");
     t.className = "toast";
@@ -550,8 +489,6 @@ function toast(msg) {
     setTimeout(()=>t.classList.add("show"),50);
     setTimeout(()=>t.remove(),2500);
 }
-
 </script>
 </body>
 </html>
-
