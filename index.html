@@ -364,8 +364,7 @@ const upgrades=[
 
 /* ================= LOGIN ================= */
 
-const playBtn = document.getElementById("playBtn");
-playBtn.addEventListener("click", () => {
+window.login = function() {
     const u = username.value;
     const p = password.value;
     if(!u || !p) return alert("Pseudo + mot de passe");
@@ -386,7 +385,7 @@ playBtn.addEventListener("click", () => {
     renderRewards();
     renderAchievements();
     checkAchievements();
-});
+}
 
 
 /* ================= CLICK ================= */
@@ -550,3 +549,4 @@ function toast(msg) {
 </script>
 </body>
 </html>
+
