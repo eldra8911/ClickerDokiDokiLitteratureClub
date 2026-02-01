@@ -184,6 +184,31 @@ onSnapshot(collection(db, "players"), (snapshot) => {
   });
 });
 
+function login(){
+    const u = usernameInput.value.trim();
+    const p = passwordInput.value.trim();
+    if(!u || !p) return alert("Pseudo + mot de passe");
+
+    player = u;
+    saveKey = "ddlc_" + CryptoJS.SHA256(u+p).toString();
+
+    loadGame();
+    loginScreen.style.display = "none";
+
+    clickSound.play().then(()=>{ clickSound.pause(); clickSound.currentTime=0 });
+    music.volume = 0.3;
+    music.play().then(()=>{ music.pause(); music.currentTime=0 });
+
+    renderShop();
+    renderAchievements();
+    renderRewards();
+    updateUI();
+    checkAchievements();
+
+    saveCloud(); // ← AJOUTÉ pour créer le doc dans Firestore
+}
+
+  
 /* ================= DATA ================= */
 let player="";
 let saveKey="";
@@ -524,5 +549,3 @@ function toast(msg) {
 </script>
 </body>
 </html>
-
-
