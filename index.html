@@ -383,6 +383,21 @@ loadGame();
 
 document.getElementById("loginScreen").style.display="none";
 
+const sound = document.getElementById("clickSound");
+const music = document.getElementById("music");
+
+// déblocage audio navigateur
+sound.play().then(() => {
+  sound.pause();
+  sound.currentTime = 0;
+}).catch(()=>{});
+
+music.volume = 0.4;
+music.play().then(() => {
+  music.pause();
+  music.currentTime = 0;
+}).catch(()=>{});
+
 renderShop();
 updateUI();
 }
@@ -461,8 +476,11 @@ function clickLiterature(){
 const sound=document.getElementById("clickSound");
 const music=document.getElementById("music");
 
-sound.currentTime=0;
-sound.play();
+sound.currentTime = 0;
+sound.play().catch(e => {
+  console.warn("Son bloqué par le navigateur", e);
+});
+;
 
 if(!musicStarted){
 music.volume=.4;
@@ -618,4 +636,5 @@ window.buyReward = buyReward;
 </script>
 </body>
 </html>
+
 
