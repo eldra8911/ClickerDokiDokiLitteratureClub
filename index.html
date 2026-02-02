@@ -456,16 +456,25 @@ function loadGame() {
 
 /* ================= FIREBASE ================= */
 async function saveCloud() {
-    await setDoc(doc(db,"players",player),{
-        points,
-        score: Math.floor(totalPoints/100),
-        totalClicks,
-        perClick,
-        passive,
-        achievements,
-        updated: Date.now()
+  if (!player) return;
+
+  try {
+    await setDoc(doc(db, "players", player), {
+      player,
+      points,
+      score: Math.floor(totalPoints / 100),
+      totalClicks,
+      perClick,
+      passive,
+      achievements,
+      rewards,
+      updated: Date.now()
     });
+  } catch (e) {
+    console.error("🔥 Firebase error:", e);
+  }
 }
+
 /* ================= ACHIEVEMENTS ================= */
 function checkAchievements(){
   achievements.forEach(a=>{
@@ -520,6 +529,7 @@ function toast(msg) {
 </script>
 </body>
 </html>
+
 
 
 
