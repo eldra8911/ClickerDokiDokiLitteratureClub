@@ -152,6 +152,17 @@ button:hover{
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
 <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  collection,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
 const music = document.getElementById("music");
 const clickSound = document.getElementById("clickSound");
 
@@ -159,8 +170,17 @@ const shopItems = document.getElementById("shopItems");
 const achievementItems = document.getElementById("achievementItems");
 const stats = document.getElementById("stats");
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+async function saveReward(reward) {
+  await setDoc(
+    doc(db, "players", player, "rewards", reward.id),
+    {
+      purchased: reward.purchased,
+      code: reward.code,
+      purchasedAt: Date.now()
+    }
+  );
+}
+
 
 /* 🔥 CONFIG FIREBASE */
 const firebaseConfig = {
@@ -183,6 +203,41 @@ const db = getFirestore(app);
     console.error("❌ Firestore erreur", e);
   }
 })();
+
+async function loadFromCloud() {
+  const statsRef = doc(db, "players", player, "data", "stats");
+  const statsSnap = await getDoc(statsRef);
+
+  if (statsSnap.exists()) {
+    const d = statsSnap.data();
+    points = d.points ?? 0;
+    totalPoints = d.totalPoints ?? 0;
+    totalClicks = d.totalClicks ?? 0;
+    perClick = d.perClick ?? 1;
+    passive = d.passive ?? 0;
+    if (d.achievements) {
+  achievements.forEach(a => {
+    const saved = d.achievements.find(x => x.id === a.id);
+    if (saved) a.unlocked = saved.unlocked;
+  });
+}
+
+  } else {
+    await saveStats(); // première connexion
+  }
+
+  // rewards
+  const rewardsSnap = await getDocs(
+    collection(db, "players", player, "rewards")
+  );
+
+  rewards.forEach(r => {
+const rewardDoc = rewardsSnap.docs.find(d => d.id === r.id);
+  if (rewardDoc) {
+    Object.assign(r, rewardDoc.data());
+  }
+  });
+}
 
 
 /* ================= DATA ================= */
@@ -309,24 +364,25 @@ function renderRewards(){
   });
 }
 
-window.buyReward = function(i){
+window.buyReward = async function(i) {
   const r = rewards[i];
-  if(points < r.cost || r.purchased) return;
+  if (points < r.cost || r.purchased) return;
 
   points -= r.cost;
   r.purchased = true;
-
-  // Code simple pour la récompense
   r.code = CryptoJS.AES.encrypt(
     `DDLC|${r.id}|PLAYER=${player}|TIME=${Date.now()}`,
-    "SECRET_EVENT_KEY"
+    "oOP57oD8z7uw-Y8aiGC-7l7RCuebt-n9JquIHbxovUk="
   ).toString();
+
+  await saveReward(r);
+  await saveStats();
 
   toast("🎁 Reward débloquée !");
   renderRewards();
-  saveGame();
-  saveCloud();
-}
+  updateUI();
+};
+
 
 /* ================= LOGIN ================= */
 const playBtn = document.getElementById("playBtn");
@@ -334,7 +390,7 @@ const usernameInput = document.getElementById("username");
 const passwordInput = document.getElementById("password");
 const loginScreen = document.getElementById("loginScreen");
 
-function login(){
+async function login(){
     const u = usernameInput.value.trim();
     const p = passwordInput.value.trim();
     if(!u || !p) return alert("Pseudo + mot de passe");
@@ -342,7 +398,7 @@ function login(){
     player = u;
     saveKey = "ddlc_" + CryptoJS.SHA256(u+p).toString();
 
-    loadGame();
+    await loadFromCloud();
     loginScreen.style.display = "none";
 
     clickSound.play().then(()=>{ clickSound.pause(); clickSound.currentTime=0 });
@@ -354,12 +410,6 @@ function login(){
     renderRewards();
     updateUI();
     checkAchievements();
-
-    saveCloud(); // ✅ CRITIQUE
-rewards[0].purchased = true;
-rewards[0].code = "TEST_CODE";
-saveCloud();
-
 }
 
 playBtn.addEventListener("click", login);
@@ -372,10 +422,8 @@ let clickTimes = []; // stocke les timestamps des clics
 window.clickLiterature = function() {
     const now = Date.now();
 
-    // on garde seulement les clics de la dernière seconde
     clickTimes = clickTimes.filter(t => now - t < 1000);
-
-    if (clickTimes.length >= 10) return; // max 10 clics/seconde
+    if (clickTimes.length >= 10) return;
     clickTimes.push(now);
 
     logo.classList.remove("bounce");
@@ -396,11 +444,9 @@ window.clickLiterature = function() {
     totalClicks++;
 
     updateUI();
-    saveGame();
-    saveCloud();
+    saveStats();   // 🔥 uniquement Firestore
     checkAchievements();
 }
-
 
 /* ================= SHOP ================= */
 function renderShop() {
@@ -426,69 +472,44 @@ window.buy = function(i) {
     passive += u.passive;
     toast("Amélioration achetée");
     updateUI();
-    saveGame();
-    saveCloud();
+    saveStats();
 }
 
 /* ================= PASSIVE ================= */
+let lastSave = Date.now();
 setInterval(()=>{
-    if(passive > 0){
-        points += passive;
-        totalPoints += passive;
-        updateUI();
-        saveGame();
-        saveCloud();
-        checkAchievements();
-    }
+  if(passive > 0){
+      points += passive;
+      totalPoints += passive;
+      updateUI();
+      checkAchievements();
+      if(Date.now() - lastSave > 5000){ 
+         saveStats();
+         lastSave = Date.now();
+      }
+  }
 }, 1000);
 
+
 /* ================= SAVE ================= */
-  function saveGame() {
-    localStorage.setItem(saveKey, JSON.stringify({
-        points,
-        perClick,
-        passive,
-        totalPoints,
-        totalClicks,
-        achievements,
-        rewards
-    }));
-}
-
-function loadGame() {
-    const s = localStorage.getItem(saveKey);
-    if(!s) return;
-
-    const d = JSON.parse(s);
-    points = d.points || 0;
-    perClick = d.perClick || 1;
-    passive = d.passive || 0;
-    totalPoints = d.totalPoints || 0;
-    totalClicks = d.totalClicks || 0;
-    achievements = d.achievements || achievements;
-    rewards = d.rewards || rewards;
-}
-
 
 /* ================= FIREBASE ================= */
-async function saveCloud() {
+async function saveStats() {
   if (!player) return;
 
-  try {
-    await setDoc(doc(db, "players", player), {
-      player,
+  await setDoc(
+    doc(db, "players", player, "data", "stats"),
+    {
       points,
-      score: Math.floor(totalPoints / 100),
+      totalPoints,
       totalClicks,
       perClick,
       passive,
       achievements,
-      rewards,
       updated: Date.now()
-    });
-  } catch (e) {
-    console.error("🔥 Firebase error:", e);
-  }
+    },
+    { merge: true }
+  );
 }
 
 /* ================= ACHIEVEMENTS ================= */
@@ -506,8 +527,7 @@ function unlockAchievement(a){
   a.unlocked = true;
   perClick += a.pointsBonus;
   toast("🏆 Achievement débloqué : " + a.name);
-  saveGame();
-  saveCloud();
+  saveStats();
 }
 
 function renderAchievements(){
@@ -545,8 +565,3 @@ function toast(msg) {
 </script>
 </body>
 </html>
-
-
-
-
-
