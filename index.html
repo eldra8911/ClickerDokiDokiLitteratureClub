@@ -152,6 +152,9 @@ button:hover{
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
 <script type="module">
+const music = document.getElementById("music");
+const clickSound = document.getElementById("clickSound");
+
 const shopItems = document.getElementById("shopItems");
 const achievementItems = document.getElementById("achievementItems");
 const stats = document.getElementById("stats");
@@ -167,6 +170,20 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+(async () => {
+  try {
+    await setDoc(doc(db, "TEST", "github-pages"), {
+      ok: true,
+      from: "github",
+      time: Date.now()
+    });
+    console.log("✅ Firestore fonctionne sur GitHub Pages");
+  } catch (e) {
+    console.error("❌ Firestore erreur", e);
+  }
+})();
+
 
 /* ================= DATA ================= */
 let player="";
@@ -449,7 +466,6 @@ async function saveCloud() {
         updated: Date.now()
     });
 }
-
 /* ================= ACHIEVEMENTS ================= */
 function checkAchievements(){
   achievements.forEach(a=>{
@@ -504,5 +520,6 @@ function toast(msg) {
 </script>
 </body>
 </html>
+
 
 
